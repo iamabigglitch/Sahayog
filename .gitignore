@@ -1,22 +1,16 @@
 # Dependencies
 node_modules/
 
-# Build output
-dist/
-
 # Environment variables
 .env
-.env.*
 
 # Logs
-npm-debug.log*
+*.log
 
-# Vite
-.vite/
+# Build files
+dist/
+build/
 
 # OS files
 .DS_Store
 Thumbs.db
-
-# VS Code
-.vscode/
