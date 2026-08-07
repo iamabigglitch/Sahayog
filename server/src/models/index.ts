@@ -122,7 +122,6 @@ Notification.belongsTo(User, {
 });
 
 // Hospital ↔ BloodBankStatus (One-to-Many)
-
 Hospital.hasMany(BloodBankStatus, {
   foreignKey: "hospital_id",
   as: "bloodBankStatuses",
@@ -164,6 +163,17 @@ DonorProfile.hasMany(CampRSVP, {
 CampRSVP.belongsTo(DonorProfile, {
   foreignKey: "donor_id",
   as: "donor",
+});
+
+// City ↔ DonationCamp (One-to-Many)
+City.hasMany(DonationCamp, {
+  foreignKey: "city_id",
+  as: "donationCamps",
+});
+
+DonationCamp.belongsTo(City, {
+  foreignKey: "city_id",
+  as: "city",
 });
 
 export { User, City, DonorProfile, HealthLog, DonationHistory, Hospital, BloodRequest, RequestResponse, Notification, BloodBankStatus, DonationCamp, CampRSVP };

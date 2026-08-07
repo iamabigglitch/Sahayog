@@ -5,13 +5,13 @@ import {
 } from "sequelize";
 
 import sequelize from "../config/database";
-import { CampStatus } from "../types/enums";
+import { CampStatus, OrganizerType } from "../types/enums";
 
 // DonationCamp Attributes
 
 export interface DonationCampAttributes {
   id: string;
-  hospital_id: string;
+  hospital_id?: string;
   title: string;
   description?: string;
   venue: string;
@@ -20,6 +20,9 @@ export interface DonationCampAttributes {
   end_time: string;
   status: CampStatus;
   created_at?: Date;
+  city_id: string;
+  organizer_name: string;
+  organizer_type: OrganizerType;
 }
 
 export interface DonationCampCreationAttributes
@@ -38,7 +41,7 @@ class DonationCamp
   implements DonationCampAttributes
 {
   public id!: string;
-  public hospital_id!: string;
+  public hospital_id?: string;
   public title!: string;
   public description?: string;
   public venue!: string;
@@ -47,6 +50,9 @@ class DonationCamp
   public end_time!: string;
   public status!: CampStatus;
   public created_at?: Date;
+  public city_id!: string;
+  public organizer_name!: string;
+  public organizer_type!: OrganizerType;
 }
 
 DonationCamp.init(
@@ -57,9 +63,22 @@ DonationCamp.init(
       primaryKey: true,
     },
 
+    city_id: {
+    type: DataTypes.UUID,
+    allowNull: false,
+    references: {
+    model: "cities",
+    key: "id",
+    },
+    },
+
     hospital_id: {
-      type: DataTypes.UUID,
-      allowNull: false,
+    type: DataTypes.UUID,
+    allowNull: true,
+    references: {
+    model: "hospitals",
+    key: "id",
+    },
     },
 
     title: {
@@ -75,6 +94,16 @@ DonationCamp.init(
     venue: {
       type: DataTypes.STRING,
       allowNull: false,
+    },
+
+    organizer_name: {
+  type: DataTypes.STRING,
+  allowNull: false,
+    },
+
+  organizer_type: {
+  type: DataTypes.ENUM(...Object.values(OrganizerType)),
+  allowNull: false,
     },
 
     camp_date: {

@@ -88,3 +88,14 @@ export enum RSVPStatus {
   ATTENDED = "attended",
   CANCELLED = "cancelled",
 }
+
+// Organizer Type
+export enum OrganizerType {
+  HOSPITAL = "hospital",
+  COLLEGE = "college",
+  NGO = "ngo",
+  COMPANY = "company",
+  COMMUNITY = "community",
+  GOVERNMENT = "government",
+  OTHER = "other",
+}
