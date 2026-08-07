@@ -6,6 +6,10 @@ import DonationHistory from "./DonationHistory";
 import Hospital from "./Hospital";
 import BloodRequest from "./BloodRequest";
 import RequestResponse from "./RequestResponse";
+import Notification from "./Notification";
+import BloodBankStatus from "./BloodBankStatus";
+import DonationCamp from "./DonationCamp";
+import CampRSVP from "./CampRSVP";
 
 // User ↔ DonorProfile (One-to-One)
 User.hasOne(DonorProfile, {
@@ -106,4 +110,60 @@ RequestResponse.belongsTo(DonorProfile, {
   as: "donor",
 });
 
-export { User, City, DonorProfile, HealthLog, DonationHistory, Hospital, BloodRequest, RequestResponse };
+// User ↔ Notification (One-to-Many)
+User.hasMany(Notification, {
+  foreignKey: "user_id",
+  as: "notifications",
+});
+
+Notification.belongsTo(User, {
+  foreignKey: "user_id",
+  as: "user",
+});
+
+// Hospital ↔ BloodBankStatus (One-to-Many)
+
+Hospital.hasMany(BloodBankStatus, {
+  foreignKey: "hospital_id",
+  as: "bloodBankStatuses",
+});
+
+BloodBankStatus.belongsTo(Hospital, {
+  foreignKey: "hospital_id",
+  as: "hospital",
+});
+
+// Hospital ↔ DonationCamp (One-to-Many)
+Hospital.hasMany(DonationCamp, {
+  foreignKey: "hospital_id",
+  as: "donationCamps",
+});
+
+DonationCamp.belongsTo(Hospital, {
+  foreignKey: "hospital_id",
+  as: "hospital",
+});
+
+// DonationCamp ↔ CampRSVP (One-to-Many)
+DonationCamp.hasMany(CampRSVP, {
+  foreignKey: "camp_id",
+  as: "rsvps",
+});
+
+CampRSVP.belongsTo(DonationCamp, {
+  foreignKey: "camp_id",
+  as: "camp",
+});
+
+// DonorProfile ↔ CampRSVP (One-to-Many)
+DonorProfile.hasMany(CampRSVP, {
+  foreignKey: "donor_id",
+  as: "campRegistrations",
+});
+
+CampRSVP.belongsTo(DonorProfile, {
+  foreignKey: "donor_id",
+  as: "donor",
+});
+
+export { User, City, DonorProfile, HealthLog, DonationHistory, Hospital, BloodRequest, RequestResponse, Notification, BloodBankStatus, DonationCamp, CampRSVP };

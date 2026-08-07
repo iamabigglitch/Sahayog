@@ -45,7 +45,7 @@ export enum DonationStatus {
   NO_SHOW = "no_show",
 }
 
-// Notifications
+// Notifications Type
 export enum NotificationType {
   REQUEST = "request",
   REMINDER = "reminder",
@@ -57,4 +57,34 @@ export enum ResponseStatus {
   PENDING = "pending",
   ACCEPTED = "accepted",
   DECLINED = "declined",
+}
+
+// Notification Status
+export enum NotificationStatus {
+  PENDING = "pending",
+  SENT = "sent",
+  FAILED = "failed",
+  READ = "read",
+}
+
+// Blood Stock Status
+export enum BloodStockStatus {
+  AVAILABLE = "available",
+  LOW = "low",
+  OUT_OF_STOCK = "out_of_stock",
+}
+
+// Blood Bank Status
+export enum CampStatus {
+  UPCOMING = "upcoming",
+  ONGOING = "ongoing",
+  COMPLETED = "completed",
+  CANCELLED = "cancelled",
+}
+
+// RSVP Status
+export enum RSVPStatus {
+  REGISTERED = "registered",
+  ATTENDED = "attended",
+  CANCELLED = "cancelled",
 }
