@@ -10,6 +10,7 @@ import Notification from "./Notification";
 import BloodBankStatus from "./BloodBankStatus";
 import DonationCamp from "./DonationCamp";
 import CampRSVP from "./CampRSVP";
+import OtpVerification from "./OtpVerification";
 
 // User ↔ DonorProfile (One-to-One)
 User.hasOne(DonorProfile, {
@@ -176,4 +177,4 @@ DonationCamp.belongsTo(City, {
   as: "city",
 });
 
-export { User, City, DonorProfile, HealthLog, DonationHistory, Hospital, BloodRequest, RequestResponse, Notification, BloodBankStatus, DonationCamp, CampRSVP };
+export { User, City, DonorProfile, HealthLog, DonationHistory, Hospital, BloodRequest, RequestResponse, Notification, BloodBankStatus, DonationCamp, CampRSVP, OtpVerification };
