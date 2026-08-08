@@ -15,7 +15,7 @@ export interface OtpVerificationAttributes {
   purpose: OtpPurpose;
   expires_at: Date;
   attempts: number;
-  verified_at?: Date;
+  verified_at?: Date | null;
   created_at?: Date;
 }
 
@@ -39,7 +39,7 @@ class OtpVerification
   public purpose!: OtpPurpose;
   public expires_at!: Date;
   public attempts!: number;
-  public verified_at?: Date;
+  public verified_at?: Date | null;
   public created_at?: Date;
 }
 
