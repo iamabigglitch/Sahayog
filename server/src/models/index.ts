@@ -11,6 +11,7 @@ import BloodBankStatus from "./BloodBankStatus";
 import DonationCamp from "./DonationCamp";
 import CampRSVP from "./CampRSVP";
 import OtpVerification from "./OtpVerification";
+import RefreshToken from "./RefreshToken";
 
 // User ↔ DonorProfile (One-to-One)
 User.hasOne(DonorProfile, {
@@ -177,4 +178,15 @@ DonationCamp.belongsTo(City, {
   as: "city",
 });
 
-export { User, City, DonorProfile, HealthLog, DonationHistory, Hospital, BloodRequest, RequestResponse, Notification, BloodBankStatus, DonationCamp, CampRSVP, OtpVerification };
+// User ↔ RefreshToken (One-to-Many)
+User.hasMany(RefreshToken, {
+  foreignKey: "user_id",
+  as: "refreshTokens",
+});
+
+RefreshToken.belongsTo(User, {
+  foreignKey: "user_id",
+  as: "user",
+});
+
+export { User, City, DonorProfile, HealthLog, DonationHistory, Hospital, BloodRequest, RequestResponse, Notification, BloodBankStatus, DonationCamp, CampRSVP, OtpVerification, RefreshToken };
