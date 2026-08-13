@@ -1,3 +1,5 @@
+import { UserRole } from "./enums";
+
 export enum OtpPurpose {
   REGISTRATION = "registration",
   LOGIN = "login",
@@ -6,5 +8,5 @@ export enum OtpPurpose {
 
 export interface JwtPayload {
   userId: string;
-  role: "donor" | "admin";
+  role: UserRole;
 }
