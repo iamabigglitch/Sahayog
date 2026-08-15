@@ -21,7 +21,7 @@ export const register = async (
       cityId
     );
 
-    res.status(200).json(result);
+    res.status(202).json(result);
   } catch (error) {
     res.status(400).json({
       error: {
@@ -57,7 +57,7 @@ export const verifyOtp = async (
         cityId
       );
 
-    res.status(200).json(result);
+    res.status(201).json(result);
   } catch (error) {
     res.status(400).json({
       error: {
@@ -147,4 +147,3 @@ export const logout = async (
     });
   }
 };
-
