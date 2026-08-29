@@ -9,6 +9,10 @@ import {
   RelationshipToPatient,
 } from "../types/enums";
 
+import {
+  RequestBroadcastService,
+} from "./requestBroadcastService";
+
 export interface CreateBloodRequestData {
   bloodGroupNeeded: BloodGroup;
   unitsNeeded: number;
@@ -21,6 +25,7 @@ export interface CreateBloodRequestData {
 }
 
 export class BloodRequestService {
+
   static async createRequest(
     data: CreateBloodRequestData
   ) {
@@ -43,13 +48,15 @@ export class BloodRequestService {
     }
 
     // Check that the hospital exists
-    const hospital = await Hospital.findByPk(hospitalId);
+    const hospital =
+      await Hospital.findByPk(hospitalId);
 
     if (!hospital) {
       throw new Error("Hospital not found");
     }
 
-    // Make sure the hospital belongs to the selected city
+    // Make sure the hospital belongs
+    // to the selected city
     if (hospital.city_id !== cityId) {
       throw new Error(
         "Hospital does not belong to the selected city"
@@ -58,23 +65,52 @@ export class BloodRequestService {
 
     // Blood requests expire after 48 hours
     const expiresAt = new Date();
+
     expiresAt.setHours(
       expiresAt.getHours() + 48
     );
 
-    const bloodRequest = await BloodRequest.create({
-      blood_group_needed: bloodGroupNeeded,
-      units_needed: unitsNeeded,
-      hospital_id: hospitalId,
-      city_id: cityId,
-      requester_name: requesterName,
-      contact_phone: contactPhone,
-      relationship_to_patient: relationshipToPatient,
-      urgency,
-      status: RequestStatus.REQUESTED,
-      trust_score: 0,
-      expires_at: expiresAt,
-    });
+    // Create the blood request
+    const bloodRequest =
+      await BloodRequest.create({
+        blood_group_needed:
+          bloodGroupNeeded,
+
+        units_needed:
+          unitsNeeded,
+
+        hospital_id:
+          hospitalId,
+
+        city_id:
+          cityId,
+
+        requester_name:
+          requesterName,
+
+        contact_phone:
+          contactPhone,
+
+        relationship_to_patient:
+          relationshipToPatient,
+
+        urgency,
+
+        status:
+          RequestStatus.REQUESTED,
+
+        trust_score: 0,
+
+        expires_at:
+          expiresAt,
+      });
+
+    // Broadcast the request
+    // to suitable donors.
+    await RequestBroadcastService
+      .broadcastRequest(
+        bloodRequest.id
+      );
 
     return bloodRequest;
   }
