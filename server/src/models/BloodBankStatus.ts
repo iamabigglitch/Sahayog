@@ -11,7 +11,7 @@ import {
   BloodStockStatus,
 } from "../types/enums";
 
-// BloodBankStatus Attributes
+// Blood Bank Status Attributes
 export interface BloodBankStatusAttributes {
   id: string;
   hospital_id: string;
@@ -19,6 +19,7 @@ export interface BloodBankStatusAttributes {
   units_available: number;
   status: BloodStockStatus;
   last_confirmed: Date;
+  submitted_by: string;
 }
 
 export interface BloodBankStatusCreationAttributes
@@ -27,7 +28,7 @@ export interface BloodBankStatusCreationAttributes
     "id" | "status" | "last_confirmed"
   > {}
 
-// BloodBankStatus Model
+// Blood Bank Status Model
 class BloodBankStatus
   extends Model<
     BloodBankStatusAttributes,
@@ -41,6 +42,7 @@ class BloodBankStatus
   public units_available!: number;
   public status!: BloodStockStatus;
   public last_confirmed!: Date;
+  public submitted_by!: string;
 }
 
 BloodBankStatus.init(
@@ -54,6 +56,10 @@ BloodBankStatus.init(
     hospital_id: {
       type: DataTypes.UUID,
       allowNull: false,
+      references: {
+        model: "hospitals",
+        key: "id",
+      },
     },
 
     blood_group: {
@@ -80,11 +86,28 @@ BloodBankStatus.init(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
+
+    submitted_by: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: "users",
+        key: "id",
+      },
+    },
   },
+
   {
     sequelize,
     tableName: "blood_bank_status",
     timestamps: false,
+
+    indexes: [
+      {
+        unique: true,
+        fields: ["hospital_id", "blood_group"],
+      },
+    ],
   }
 );
 
