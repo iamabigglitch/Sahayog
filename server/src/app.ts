@@ -6,6 +6,8 @@ import donorMatchingRoutes from "./routes/donorMatchingRoutes";
 import notificationRoutes from "./routes/notificationRoutes";
 import donationHistoryRoutes from "./routes/donationHistoryRoutes";
 import bloodBankStatusRoutes from "./routes/bloodBankStatusRoutes";
+import donationCampRoutes from "./routes/donationCampRoutes";
+import campRSVPRoutes from "./routes/campRSVPRoutes";
 
 
 const app = express();
@@ -19,5 +21,7 @@ app.use("/api/v1/donor-matching", donorMatchingRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
 app.use("/api/v1/donation-history", donationHistoryRoutes);
 app.use("/api/v1/blood-bank-status", bloodBankStatusRoutes);
+app.use("/api/v1/donation-camps", donationCampRoutes);
+app.use("/api/v1/camp-rsvps", campRSVPRoutes);
 
 export default app;

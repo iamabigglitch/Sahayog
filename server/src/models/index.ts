@@ -134,6 +134,17 @@ BloodBankStatus.belongsTo(Hospital, {
   as: "hospital",
 });
 
+// User ↔ BloodBankStatus (One-to-Many)
+User.hasMany(BloodBankStatus, {
+  foreignKey: "submitted_by",
+  as: "bloodBankStatusUpdates",
+});
+
+BloodBankStatus.belongsTo(User, {
+  foreignKey: "submitted_by",
+  as: "submittedBy",
+});
+
 // Hospital ↔ DonationCamp (One-to-Many)
 Hospital.hasMany(DonationCamp, {
   foreignKey: "hospital_id",
