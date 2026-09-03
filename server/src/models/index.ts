@@ -12,6 +12,7 @@ import DonationCamp from "./DonationCamp";
 import CampRSVP from "./CampRSVP";
 import OtpVerification from "./OtpVerification";
 import RefreshToken from "./RefreshToken";
+import DeviceToken from "./DeviceToken";
 
 // User ↔ DonorProfile (One-to-One)
 User.hasOne(DonorProfile, {
@@ -200,4 +201,4 @@ RefreshToken.belongsTo(User, {
   as: "user",
 });
 
-export { User, City, DonorProfile, HealthLog, DonationHistory, Hospital, BloodRequest, RequestResponse, Notification, BloodBankStatus, DonationCamp, CampRSVP, OtpVerification, RefreshToken };
+export { User, City, DonorProfile, HealthLog, DonationHistory, Hospital, BloodRequest, RequestResponse, Notification, BloodBankStatus, DonationCamp, CampRSVP, OtpVerification, RefreshToken, DeviceToken };

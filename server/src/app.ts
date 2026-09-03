@@ -9,6 +9,7 @@ import bloodBankStatusRoutes from "./routes/bloodBankStatusRoutes";
 import donationCampRoutes from "./routes/donationCampRoutes";
 import campRSVPRoutes from "./routes/campRSVPRoutes";
 import adminRoutes from "./routes/adminRoutes";
+import deviceTokenRoutes from "./routes/deviceTokenRoutes";
 
 
 const app = express();
@@ -25,5 +26,6 @@ app.use("/api/v1/blood-bank-status", bloodBankStatusRoutes);
 app.use("/api/v1/donation-camps", donationCampRoutes);
 app.use("/api/v1/camp-rsvps", campRSVPRoutes);
 app.use("/api/v1/admin", adminRoutes);
+app.use("/api/v1/notifications/devices", deviceTokenRoutes);
 
 export default app;
