@@ -8,6 +8,10 @@ import {
 } from "./notificationService";
 
 import {
+  NotificationDeliveryService,
+} from "./notificationDeliveryService";
+
+import {
   NotificationType,
 } from "../types/enums";
 
@@ -20,8 +24,7 @@ export class RequestBroadcastService {
 
   // Maximum number of donors
   // notified in a single broadcast.
-  private static readonly MAX_DONORS = 10; 
-
+  private static readonly MAX_DONORS = 10;
 
   // Broadcast blood request
   static async broadcastRequest(
@@ -41,24 +44,38 @@ export class RequestBroadcastService {
         this.MAX_DONORS
       );
 
-
-    // Create notifications.
+    // Create and deliver notifications.
     for (const donor of selectedDonors) {
 
-      await NotificationService.createNotification({
-        userId: donor.donorId,
+      const notification =
+        await NotificationService.createNotification({
+          userId: donor.donorId,
 
-        requestId,
+          requestId,
 
-        title: "Blood Donation Request",
+          title: "Blood Donation Request",
 
-        message:
-          `A ${donor.bloodGroup} donor is needed. ` +
-          `You have been identified as a potential match ` +
-          `for an emergency blood request.`,
+          message:
+            `A ${donor.bloodGroup} donor is needed. ` +
+            `You have been identified as a potential match ` +
+            `for an emergency blood request.`,
 
-        type: NotificationType.REQUEST,
-      });
+          type: NotificationType.REQUEST,
+        });
+
+      // Attempt FCM delivery.
+      // A failure for one donor should not stop
+      // notifications from being sent to the others.
+      try {
+        await NotificationDeliveryService.deliverNotification(
+          notification.id
+        );
+      } catch (error) {
+        console.error(
+          `Failed to deliver notification ${notification.id}:`,
+          error
+        );
+      }
     }
 
     return {
