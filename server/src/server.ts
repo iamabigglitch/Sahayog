@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 import sequelize from "./config/database";
 
 import app from "./app";
+import { RequestExpiryService } from "./services/requestExpiryService";
 
 // Import models so their associations are registered
 import "./models";
@@ -24,6 +25,10 @@ async function startServer() {
     await sequelize.sync({ alter: true });
 
     console.log("Database synchronized!");
+
+
+    // Start the request auto-expiry background job
+    RequestExpiryService.startExpiryJob();
 
 
     // Start Express server

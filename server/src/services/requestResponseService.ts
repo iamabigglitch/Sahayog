@@ -1,3 +1,4 @@
+import sequelize from "../config/database";
 import RequestResponse from "../models/RequestResponse";
 import BloodRequest from "../models/BloodRequest";
 import DonorProfile from "../models/DonorProfile";
@@ -172,24 +173,51 @@ export class RequestResponseService {
       );
     }
 
-    // Update the response
-    response.status = status;
-    response.responded_at = new Date();
+    // From here on, the write must be atomic — another donor could
+    // be accepting a different response to this same blood request
+    // at almost exactly the same time.
+    const transaction = await sequelize.transaction();
 
-    await response.save();
+    try {
+      if (status === ResponseStatus.ACCEPTED) {
+        // Conditional update: only succeeds if the request is STILL
+        // "requested" at the exact moment of the write. Postgres
+        // serializes concurrent UPDATEs on the same row, so if two
+        // donors race to accept, only one UPDATE can match this
+        // WHERE clause — the other gets affectedCount === 0 and
+        // knows it lost the race. This also correctly catches the
+        // case where the request expired between our check above
+        // and this write.
+        const [affectedCount] = await BloodRequest.update(
+          { status: RequestStatus.ACCEPTED },
+          {
+            where: {
+              id: bloodRequest.id,
+              status: RequestStatus.REQUESTED,
+            },
+            transaction,
+          }
+        );
 
-    // If donor was accepted,
-    // mark the blood request as accepted
-    if (
-      status ===
-      ResponseStatus.ACCEPTED
-    ) {
-      bloodRequest.status =
-        RequestStatus.ACCEPTED;
+        if (affectedCount === 0) {
+          throw new Error(
+            "This blood request has already been accepted by another donor"
+          );
+        }
+      }
 
-      await bloodRequest.save();
+      response.status = status;
+      response.responded_at = new Date();
+
+      await response.save({ transaction });
+
+      await transaction.commit();
+
+      return response;
+
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
     }
-
-    return response;
   }
 }
