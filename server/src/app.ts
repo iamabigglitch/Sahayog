@@ -28,4 +28,8 @@ app.use("/api/v1/camp-rsvps", campRSVPRoutes);
 app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/notifications/devices", deviceTokenRoutes);
 
+// Centralized error handler (last middleware)
+import { errorHandler } from "./middleware/errorHandler";
+app.use(errorHandler);
+
 export default app;

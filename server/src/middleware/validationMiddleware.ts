@@ -17,7 +17,7 @@ export const validate = (
 ) => {
   return (
     req: Request,
-    res: Response,
+    _res: Response,
     next: NextFunction
   ): void => {
     try {
@@ -39,25 +39,8 @@ export const validate = (
 
       next();
     } catch (error) {
-      if (error instanceof ZodError) {
-        res.status(400).json({
-          error: {
-            code: "VALIDATION_ERROR",
-            message: error.issues
-              .map((issue) => issue.message)
-              .join(", "),
-          },
-        });
-
-        return;
-      }
-
-      res.status(400).json({
-        error: {
-          code: "VALIDATION_ERROR",
-          message: "Invalid request data",
-        },
-      });
+      // Delegate error handling to centralized error handler
+      next(error);
     }
   };
 };
