@@ -6,6 +6,7 @@ import {
   updateAvailability,
   getPublicProfile,
 } from "../controllers/donorProfileController";
+import { asyncHandler } from "../utils/asyncHandler";
 
 import {
   validate,
@@ -31,7 +32,7 @@ const router = Router();
 router.get(
   "/me",
   authenticate,
-  getMyProfile
+  asyncHandler(getMyProfile)
 );
 
 
@@ -40,7 +41,7 @@ router.patch(
   authenticate,
   authRateLimiter,
   validate(updateDonorProfileSchema),
-  updateMyProfile
+  asyncHandler(updateMyProfile)
 );
 
 
@@ -49,13 +50,13 @@ router.patch(
   authenticate,
   authRateLimiter,
   validate(updateAvailabilitySchema),
-  updateAvailability
+  asyncHandler(updateAvailability)
 );
 
 
 router.get(
   "/:id/public",
-  getPublicProfile
+  asyncHandler(getPublicProfile)
 );
 
 

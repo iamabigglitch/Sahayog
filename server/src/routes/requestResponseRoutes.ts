@@ -4,6 +4,7 @@ import {
   createRequestResponse,
   updateRequestResponseStatus,
 } from "../controllers/requestResponseController";
+import { asyncHandler } from "../utils/asyncHandler";
 
 import {
   validate,
@@ -31,7 +32,7 @@ router.post(
   authenticate,
   authRateLimiter,
   validate(createRequestResponseSchema),
-  createRequestResponse
+  asyncHandler(createRequestResponse)
 );
 
 
@@ -40,7 +41,7 @@ router.patch(
   "/:responseId",
   authenticate,
   validate(updateRequestResponseSchema),
-  updateRequestResponseStatus
+  asyncHandler(updateRequestResponseStatus)
 );
 
 

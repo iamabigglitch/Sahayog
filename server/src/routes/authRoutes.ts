@@ -7,6 +7,7 @@ import {
   refresh,
   logout,
 } from "../controllers/authController";
+import { asyncHandler } from "../utils/asyncHandler";
 
 import {
   authRateLimiter,
@@ -36,7 +37,7 @@ router.post(
   "/register",
   authRateLimiter,
   validate(registerSchema),
-  register
+  asyncHandler(register)
 );
 
 
@@ -45,7 +46,7 @@ router.post(
   "/verify-otp",
   otpRateLimiter,
   validate(verifyOtpSchema),
-  verifyOtp
+  asyncHandler(verifyOtp)
 );
 
 
@@ -54,7 +55,7 @@ router.post(
   "/login",
   authRateLimiter,
   validate(loginSchema),
-  login
+  asyncHandler(login)
 );
 
 
@@ -63,7 +64,7 @@ router.post(
   "/refresh",
   authRateLimiter,
   validate(refreshSchema),
-  refresh
+  asyncHandler(refresh)
 );
 
 
@@ -72,7 +73,7 @@ router.post(
   "/logout",
   authenticate,
   validate(logoutSchema),
-  logout
+  asyncHandler(logout)
 );
 
 

@@ -6,6 +6,7 @@ import {
   getHospitalBloodBankStatuses,
   getHospitalBloodGroupStatus,
 } from "../controllers/bloodBankStatusController";
+import { asyncHandler } from "../utils/asyncHandler";
 
 import {
   validate,
@@ -34,7 +35,7 @@ const router = Router();
 
 router.get(
   "/",
-  getAllBloodBankStatuses
+  asyncHandler(getAllBloodBankStatuses)
 );
 
 
@@ -42,7 +43,7 @@ router.get(
 
 router.get(
   "/hospital/:hospitalId",
-  getHospitalBloodBankStatuses
+  asyncHandler(getHospitalBloodBankStatuses)
 );
 
 
@@ -50,7 +51,7 @@ router.get(
 
 router.get(
   "/hospital/:hospitalId/:bloodGroup",
-  getHospitalBloodGroupStatus
+  asyncHandler(getHospitalBloodGroupStatus)
 );
 
 

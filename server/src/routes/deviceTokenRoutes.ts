@@ -6,6 +6,7 @@ import {
 } from "../controllers/deviceTokenController";
 
 import { authenticate } from "../middleware/authMiddleware";
+import { asyncHandler } from "../utils/asyncHandler";
 
 import { validate } from "../middleware/validationMiddleware";
 
@@ -20,7 +21,7 @@ router.post(
   "/",
   authenticate,
   validate(registerDeviceTokenSchema),
-  registerDeviceToken
+  asyncHandler(registerDeviceToken)
 );
 
 router.delete(
@@ -30,7 +31,7 @@ router.delete(
     deleteDeviceTokenParamsSchema,
     "params"
   ),
-  deleteDeviceToken
+  asyncHandler(deleteDeviceToken)
 );
 
 export default router;

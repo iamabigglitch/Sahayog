@@ -1,6 +1,7 @@
 import { Router } from "express";
 
 import { authenticate } from "../middleware/authMiddleware";
+import { asyncHandler } from "../utils/asyncHandler";
 
 import {
   rsvpToDonationCamp,
@@ -14,21 +15,21 @@ const router = Router();
 router.get(
   "/my",
   authenticate,
-  getMyDonationCampRsvps
+  asyncHandler(getMyDonationCampRsvps)
 );
 
 // RSVP to a donation camp
 router.post(
   "/:id/rsvp",
   authenticate,
-  rsvpToDonationCamp
+  asyncHandler(rsvpToDonationCamp)
 );
 
 // Cancel RSVP
 router.patch(
   "/:id/rsvp/cancel",
   authenticate,
-  cancelDonationCampRsvp
+  asyncHandler(cancelDonationCampRsvp)
 );
 
 export default router;

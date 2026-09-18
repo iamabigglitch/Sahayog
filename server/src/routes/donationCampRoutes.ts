@@ -11,6 +11,7 @@ import {
   listDonationCamps,
   getDonationCamp,
 } from "../controllers/donationCampController";
+import { asyncHandler } from "../utils/asyncHandler";
 
 import {
   createDonationCampSchema,
@@ -21,8 +22,8 @@ import {
 const router = Router();
 
 // Public routes
-router.get("/", listDonationCamps);
-router.get("/:id", getDonationCamp);
+router.get("/", asyncHandler(listDonationCamps));
+router.get("/:id", asyncHandler(getDonationCamp));
 
 // Admin routes
 router.post(
@@ -30,7 +31,7 @@ router.post(
   authenticate,
   requireAdmin,
   validate(createDonationCampSchema),
-  createDonationCamp
+  asyncHandler(createDonationCamp)
 );
 
 router.patch(
@@ -38,7 +39,7 @@ router.patch(
   authenticate,
   requireAdmin,
   validate(updateDonationCampSchema),
-  updateDonationCamp
+  asyncHandler(updateDonationCamp)
 );
 
 router.patch(
@@ -46,7 +47,7 @@ router.patch(
   authenticate,
   requireAdmin,
   validate(updateCampStatusSchema),
-  updateDonationCampStatus
+  asyncHandler(updateDonationCampStatus)
 );
 
 export default router;

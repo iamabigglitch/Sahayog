@@ -4,6 +4,7 @@ import {
   getMyNotifications,
   markNotificationAsRead,
 } from "../controllers/notificationController";
+import { asyncHandler } from "../utils/asyncHandler";
 
 import {
   validate,
@@ -23,7 +24,7 @@ const router = Router();
 router.get(
   "/",
   authenticate,
-  getMyNotifications
+  asyncHandler(getMyNotifications)
 );
 
 // Mark notification as read
@@ -34,7 +35,7 @@ router.patch(
     notificationParamsSchema,
     "params"
   ),
-  markNotificationAsRead
+  asyncHandler(markNotificationAsRead)
 );
 
 export default router;

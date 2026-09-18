@@ -3,6 +3,7 @@ import { Router } from "express";
 import {
   createBloodRequest,
 } from "../controllers/bloodRequestController";
+import { asyncHandler } from "../utils/asyncHandler";
 
 import {
   validate,
@@ -26,7 +27,7 @@ router.post(
   "/",
   authRateLimiter,
   validate(createBloodRequestSchema),
-  createBloodRequest
+  asyncHandler(createBloodRequest)
 );
 
 

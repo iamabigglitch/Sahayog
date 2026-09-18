@@ -3,6 +3,7 @@ import { Router } from "express";
 import {
   getDonorMatches,
 } from "../controllers/donorMatchingController";
+import { asyncHandler } from "../utils/asyncHandler";
 
 import {
   validate,
@@ -25,7 +26,7 @@ router.get(
     donorMatchingParamsSchema,
     "params"
   ),
-  getDonorMatches
+  asyncHandler(getDonorMatches)
 );
 
 export default router;

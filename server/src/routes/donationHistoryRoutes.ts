@@ -9,6 +9,7 @@ import {
   completeAcceptedRequest,
   updateDonationStatus,
 } from "../controllers/donationHistoryController";
+import { asyncHandler } from "../utils/asyncHandler";
 
 import {
   validate,
@@ -40,7 +41,7 @@ const router = Router();
 router.get(
   "/me",
   authenticate,
-  getMyDonationHistory
+  asyncHandler(getMyDonationHistory)
 );
 
 
@@ -48,7 +49,7 @@ router.get(
 router.post(
   "/requests/:requestId/complete",
   authenticate,
-  completeAcceptedRequest
+  asyncHandler(completeAcceptedRequest)
 );
 
 // Get one donation record belonging
@@ -56,7 +57,7 @@ router.post(
 router.get(
   "/:id",
   authenticate,
-  getDonationHistoryById
+  asyncHandler(getDonationHistoryById)
 );
 
 
@@ -71,7 +72,7 @@ router.post(
   validate(
     createDonationHistorySchema
   ),
-  createDonationHistory
+  asyncHandler(createDonationHistory)
 );
 
 
@@ -84,7 +85,7 @@ router.patch(
   validate(
     updateDonationStatusSchema
   ),
-  updateDonationStatus
+  asyncHandler(updateDonationStatus)
 );
 
 
