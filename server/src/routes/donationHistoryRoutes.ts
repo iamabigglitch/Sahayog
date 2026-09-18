@@ -6,6 +6,7 @@ import {
   getMyDonationHistory,
   getDonationHistoryById,
   createDonationHistory,
+  completeAcceptedRequest,
   updateDonationStatus,
 } from "../controllers/donationHistoryController";
 
@@ -42,6 +43,13 @@ router.get(
   getMyDonationHistory
 );
 
+
+// Complete the accepted blood request for the authenticated donor.
+router.post(
+  "/requests/:requestId/complete",
+  authenticate,
+  completeAcceptedRequest
+);
 
 // Get one donation record belonging
 // to the logged-in donor

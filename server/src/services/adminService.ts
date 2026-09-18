@@ -326,6 +326,38 @@ export class AdminService {
       throw new Error("Blood request not found");
     }
 
+    if (status === RequestStatus.COMPLETED) {
+      throw new Error(
+        "Completed requests must be finalized through the accepted donor fulfillment flow"
+      );
+    }
+
+    if (request.status === RequestStatus.COMPLETED) {
+      throw new Error("A completed blood request cannot be changed");
+    }
+
+    if (request.status === RequestStatus.EXPIRED) {
+      throw new Error("An expired blood request cannot be changed");
+    }
+
+    const validTransitions: Partial<Record<RequestStatus, RequestStatus[]>> = {
+      [RequestStatus.REQUESTED]: [
+        RequestStatus.ACCEPTED,
+        RequestStatus.EXPIRED,
+      ],
+      [RequestStatus.ACCEPTED]: [
+        RequestStatus.EXPIRED,
+      ],
+    };
+
+    if (
+      !validTransitions[request.status]?.includes(status)
+    ) {
+      throw new Error(
+        "Invalid blood request status transition"
+      );
+    }
+
     await request.update({
       status,
     });

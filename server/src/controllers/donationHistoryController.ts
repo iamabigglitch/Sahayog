@@ -142,6 +142,52 @@ export const createDonationHistory =
     }
   };
 
+export const completeAcceptedRequest =
+  async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
+    try {
+      if (!req.user) {
+        res.status(401).json({
+          error: {
+            code: "UNAUTHORIZED",
+            message: "Authentication required",
+          },
+        });
+        return;
+      }
+
+      const requestId = req.params.requestId as string;
+      const donationDate =
+        req.body.donationDate
+          ? new Date(req.body.donationDate)
+          : new Date();
+
+      const donation =
+        await DonationHistoryService.completeAcceptedRequest(
+          requestId,
+          req.user.userId,
+          donationDate
+        );
+
+      res.status(200).json({
+        message: "Blood request completed successfully",
+        donationHistory: donation,
+      });
+    } catch (error) {
+      res.status(400).json({
+        error: {
+          code: "REQUEST_COMPLETION_FAILED",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Failed to complete the blood request",
+        },
+      });
+    }
+  };
+
 
 // Update Donation Status
 // Admin only

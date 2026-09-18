@@ -1,10 +1,13 @@
+import sequelize from "../config/database";
 import DonationHistory from "../models/DonationHistory";
 import DonorProfile from "../models/DonorProfile";
 import BloodRequest from "../models/BloodRequest";
+import RequestResponse from "../models/RequestResponse";
 
 import {
   DonationStatus,
   RequestStatus,
+  ResponseStatus,
 } from "../types/enums";
 
 export interface CreateDonationHistoryData {
@@ -261,5 +264,98 @@ export class DonationHistoryService {
     }
 
     return donation;
+  }
+
+  // Complete the accepted request using the donor who was matched and accepted.
+  // This is the only supported path to move a request from ACCEPTED to COMPLETED.
+  static async completeAcceptedRequest(
+    requestId: string,
+    userId: string,
+    donationDate: Date = new Date()
+  ) {
+    if (Number.isNaN(donationDate.getTime())) {
+      throw new Error("Invalid donation date");
+    }
+
+    const donor = await DonorProfile.findOne({
+      where: { user_id: userId },
+    });
+
+    if (!donor) {
+      throw new Error("Donor profile not found");
+    }
+
+    const request = await BloodRequest.findByPk(requestId);
+
+    if (!request) {
+      throw new Error("Blood request not found");
+    }
+
+    if (request.status !== RequestStatus.ACCEPTED) {
+      throw new Error(
+        "Only an accepted blood request can be completed"
+      );
+    }
+
+    if (request.expires_at <= new Date()) {
+      throw new Error("This blood request has expired");
+    }
+
+    const acceptedResponse = await RequestResponse.findOne({
+      where: {
+        request_id: requestId,
+        donor_id: donor.id,
+        status: ResponseStatus.ACCEPTED,
+      },
+    });
+
+    if (!acceptedResponse) {
+      throw new Error(
+        "You are not the accepted donor for this blood request"
+      );
+    }
+
+    const transaction = await sequelize.transaction();
+
+    try {
+      const existingDonation = await DonationHistory.findOne({
+        where: {
+          donor_id: donor.id,
+          request_id: requestId,
+        },
+        transaction,
+      });
+
+      if (existingDonation) {
+        throw new Error(
+          "Donation history already exists for this request"
+        );
+      }
+
+      const completedDonation = await DonationHistory.create(
+        {
+          donor_id: donor.id,
+          request_id: requestId,
+          status: DonationStatus.COMPLETED,
+          donation_date: donationDate,
+        },
+        { transaction }
+      );
+
+      await request.update(
+        { status: RequestStatus.COMPLETED },
+        { transaction }
+      );
+
+      donor.last_donation_date = donationDate;
+      await donor.save({ transaction });
+
+      await transaction.commit();
+
+      return completedDonation;
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
   }
 }
