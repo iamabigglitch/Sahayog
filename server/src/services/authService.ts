@@ -22,6 +22,7 @@ import {
   signRefreshToken,
   verifyRefreshToken,
 } from "../utils/jwtUtil";
+import { ApiError } from "../utils/apiError";
 
 
 // Hash refresh token before storing it in the database
@@ -38,7 +39,7 @@ const getRefreshTokenExpiry = (token: string): Date => {
   const parts = token.split(".");
 
   if (parts.length !== 3) {
-    throw new Error("Invalid refresh token");
+    throw new ApiError(401, "INVALID_REFRESH_TOKEN", "Invalid refresh token");
   }
 
   const payload = JSON.parse(
@@ -46,7 +47,7 @@ const getRefreshTokenExpiry = (token: string): Date => {
   );
 
   if (!payload.exp) {
-    throw new Error("Refresh token expiry is missing");
+    throw new ApiError(401, "INVALID_REFRESH_TOKEN", "Refresh token expiry is missing");
   }
 
   return new Date(payload.exp * 1000);
@@ -100,7 +101,7 @@ export class AuthService {
     });
 
     if (existingUser) {
-      throw new Error("Phone number is already registered");
+      throw new ApiError(409, "ACCOUNT_EXISTS", "Phone number is already registered");
     }
 
     /*
@@ -146,7 +147,7 @@ export class AuthService {
     });
 
     if (existingUser) {
-      throw new Error("Phone number is already registered");
+      throw new ApiError(409, "ACCOUNT_EXISTS", "Phone number is already registered");
     }
 
     // User + DonorProfile + RefreshToken
@@ -226,7 +227,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new Error("Invalid phone number or password");
+      throw new ApiError(401, "INVALID_CREDENTIALS", "Invalid phone number or password");
     }
 
     // Compare supplied password with stored hash
@@ -236,13 +237,13 @@ export class AuthService {
     );
 
     if (!passwordMatches) {
-      throw new Error("Invalid phone number or password");
+      throw new ApiError(401, "INVALID_CREDENTIALS", "Invalid phone number or password");
     }
 
     // Only verified accounts can log in
 
     if (!user.phone_verified) {
-      throw new Error("Phone number is not verified");
+      throw new ApiError(403, "PHONE_NOT_VERIFIED", "Phone number is not verified");
     }
 
     // Create a new session
@@ -277,17 +278,17 @@ export class AuthService {
     });
 
     if (!storedToken) {
-      throw new Error("Refresh token is invalid");
+      throw new ApiError(401, "INVALID_REFRESH_TOKEN", "Refresh token is invalid");
     }
 
     // Prevent reuse of a revoked token
     if (storedToken.revoked_at) {
-      throw new Error("Refresh token has been revoked");
+      throw new ApiError(401, "REFRESH_TOKEN_REVOKED", "Refresh token has been revoked");
     }
 
     // Check database expiry as well
     if (storedToken.expires_at <= new Date()) {
-      throw new Error("Refresh token has expired");
+      throw new ApiError(401, "REFRESH_TOKEN_EXPIRED", "Refresh token has expired");
     }
 
     // Make sure the user still exists
@@ -296,7 +297,7 @@ export class AuthService {
     );
 
     if (!user) {
-      throw new Error("User not found");
+      throw new ApiError(404, "USER_NOT_FOUND", "User not found");
     }
 
     const transaction = await sequelize.transaction();
@@ -353,9 +354,7 @@ export class AuthService {
     // This prevents a caller from supplying another user's refresh token
     // and revoking their active session.
     if (storedToken.user_id !== userId) {
-      throw new Error(
-        "You are not authorized to revoke this session"
-      );
+      throw new ApiError(403, "FORBIDDEN", "You are not authorized to revoke this session");
     }
 
     // Revoke only if it has not already been revoked
