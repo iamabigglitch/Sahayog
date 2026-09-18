@@ -129,16 +129,36 @@ export const logout = async (
   res: Response
 ): Promise<void> => {
   try {
+    if (!req.user) {
+      res.status(401).json({
+        error: {
+          code: "UNAUTHORIZED",
+          message: "Authentication required",
+        },
+      });
+      return;
+    }
+
     const { refreshToken } = req.body;
 
     const result =
-      await AuthService.logout(refreshToken);
+      await AuthService.logout(
+        refreshToken,
+        req.user.userId
+      );
 
     res.status(200).json(result);
   } catch (error) {
-    res.status(400).json({
+    const status =
+      error instanceof Error &&
+      error.message ===
+        "You are not authorized to revoke this session"
+        ? 403
+        : 400;
+
+    res.status(status).json({
       error: {
-        code: "LOGOUT_FAILED",
+        code: status === 403 ? "FORBIDDEN" : "LOGOUT_FAILED",
         message:
           error instanceof Error
             ? error.message

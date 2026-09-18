@@ -331,7 +331,7 @@ export class AuthService {
   }
 
   // LOGOUT
-  static async logout(refreshToken: string) {
+  static async logout(refreshToken: string, userId: string) {
     const tokenHash = hashRefreshToken(refreshToken);
 
     const storedToken = await RefreshToken.findOne({
@@ -343,11 +343,19 @@ export class AuthService {
     // Logout is idempotent.
     // If the token does not exist, the user
     // is still considered logged out.
-
     if (!storedToken) {
       return {
         message: "Logged out successfully",
       };
+    }
+
+    // Only revoke the session that belongs to the authenticated user.
+    // This prevents a caller from supplying another user's refresh token
+    // and revoking their active session.
+    if (storedToken.user_id !== userId) {
+      throw new Error(
+        "You are not authorized to revoke this session"
+      );
     }
 
     // Revoke only if it has not already been revoked
