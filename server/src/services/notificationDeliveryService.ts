@@ -55,22 +55,41 @@ export class NotificationDeliveryService {
           error
         );
 
-        const errorMessage =
-          error instanceof Error
-            ? error.message.toLowerCase()
-            : "";
+        // Try to detect permanent invalid token errors from the
+        // Firebase Admin SDK. Prefer structured error codes when
+        // available, otherwise fall back to message text.
+        const errAny = error as any;
+        const codeStr =
+          (typeof errAny?.code === "string" && errAny.code) ||
+          (typeof errAny?.errorInfo?.code === "string" && errAny.errorInfo.code) ||
+          (errAny instanceof Error && errAny.message) ||
+          "";
 
+        const lower = String(codeStr).toLowerCase();
+
+        // Permanent token errors reported by FCM:
+        // - messaging/registration-token-not-registered
+        // - messaging/invalid-registration-token
+        // Some environments return a message containing these
+        // substrings rather than a code property, so check both.
         if (
-          errorMessage.includes(
-            "registration-token-not-registered"
-          ) ||
-          errorMessage.includes(
-            "invalid-registration-token"
-          )
+          lower.includes("registration-token-not-registered") ||
+          lower.includes("invalid-registration-token") ||
+          lower.includes("not-registered") ||
+          lower.includes("invalid-registration-token")
         ) {
-          deviceToken.is_active = false;
-          await deviceToken.save();
+          try {
+            deviceToken.is_active = false;
+            await deviceToken.save();
+          } catch (saveErr) {
+            console.error(
+              `Failed to deactivate device token ${deviceToken.id}:`,
+              saveErr
+            );
+          }
         }
+
+        // Continue delivering to other device tokens — do not rethrow.
       }
     }
 
