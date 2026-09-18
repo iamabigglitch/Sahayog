@@ -1,48 +1,29 @@
 import { Request, Response, NextFunction } from "express";
 
-import {
-  verifyAccessToken,
-} from "../utils/jwtUtil";
-
+import { verifyAccessToken } from "../utils/jwtUtil";
 import { UserRole } from "../types/enums";
-
+import { ApiError } from "../utils/apiError";
 
 // Authenticate
 // Verifies the JWT access token and attaches the user
-// information to the request.
-
+// information to the request. Throws ApiError to be handled
+// by the centralized error handler.
 export const authenticate = (
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ): void => {
-
   try {
-
     const authorizationHeader = req.headers.authorization;
 
     if (!authorizationHeader) {
-      res.status(401).json({
-        error: {
-          code: "UNAUTHORIZED",
-          message: "Authorization header is required",
-        },
-      });
-
-      return;
+      return next(new ApiError(401, "UNAUTHORIZED", "Authorization header is required"));
     }
 
     const [scheme, token] = authorizationHeader.split(" ");
 
     if (scheme !== "Bearer" || !token) {
-      res.status(401).json({
-        error: {
-          code: "UNAUTHORIZED",
-          message: "Invalid authorization header",
-        },
-      });
-
-      return;
+      return next(new ApiError(401, "UNAUTHORIZED", "Invalid authorization header"));
     }
 
     const payload = verifyAccessToken(token);
@@ -50,53 +31,21 @@ export const authenticate = (
     req.user = payload;
 
     next();
-
   } catch (error) {
-
-    res.status(401).json({
-      error: {
-        code: "UNAUTHORIZED",
-        message: "Invalid or expired access token",
-      },
-    });
-
+    return next(new ApiError(401, "UNAUTHORIZED", "Invalid or expired access token"));
   }
 };
 
-
 // Authorize
-// Restricts an endpoint to specific user roles.
-
-export const authorize = (
-  ...allowedRoles: UserRole[]
-) => {
-
-  return (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): void => {
-
+// Restricts an endpoint to specific user roles. Throws ApiError on failure.
+export const authorize = (...allowedRoles: UserRole[]) => {
+  return (req: Request, _res: Response, next: NextFunction): void => {
     if (!req.user) {
-      res.status(401).json({
-        error: {
-          code: "UNAUTHORIZED",
-          message: "Authentication required",
-        },
-      });
-
-      return;
+      return next(new ApiError(401, "UNAUTHORIZED", "Authentication required"));
     }
 
     if (!allowedRoles.includes(req.user.role)) {
-      res.status(403).json({
-        error: {
-          code: "FORBIDDEN",
-          message: "You do not have permission to access this resource",
-        },
-      });
-
-      return;
+      return next(new ApiError(403, "FORBIDDEN", "You do not have permission to access this resource"));
     }
 
     next();
