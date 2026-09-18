@@ -68,6 +68,13 @@ DonorProfile.init(
     user_id: {
       type: DataTypes.UUID,
       allowNull: false,
+      unique: true,
+      references: {
+        model: "users",
+        key: "id",
+      },
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE",
     },
 
     blood_group: {
@@ -78,6 +85,12 @@ DonorProfile.init(
     city_id: {
       type: DataTypes.UUID,
       allowNull: false,
+      references: {
+        model: "cities",
+        key: "id",
+      },
+      onDelete: "RESTRICT",
+      onUpdate: "CASCADE",
     },
 
     latitude: {
@@ -116,6 +129,17 @@ DonorProfile.init(
     timestamps: true,
     createdAt: false,
     updatedAt: "updated_at",
+    indexes: [
+      {
+        fields: ["city_id"],
+      },
+      {
+        fields: ["available", "donor_verified"],
+      },
+      {
+        fields: ["blood_group"],
+      },
+    ],
   }
 );
 

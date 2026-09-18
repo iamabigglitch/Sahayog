@@ -57,6 +57,12 @@ Hospital.init(
     city_id: {
       type: DataTypes.UUID,
       allowNull: false,
+      references: {
+        model: "cities",
+        key: "id",
+      },
+      onDelete: "RESTRICT",
+      onUpdate: "CASCADE",
     },
 
     address: {
@@ -83,6 +89,11 @@ Hospital.init(
     sequelize,
     tableName: "hospitals",
     timestamps: false,
+    indexes: [
+      {
+        fields: ["city_id"],
+      },
+    ],
   }
 );
 

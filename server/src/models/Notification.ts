@@ -60,11 +60,23 @@ Notification.init(
     user_id: {
       type: DataTypes.UUID,
       allowNull: false,
+      references: {
+        model: "users",
+        key: "id",
+      },
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE",
     },
 
     request_id: {
       type: DataTypes.UUID,
       allowNull: false,
+      references: {
+        model: "blood_requests",
+        key: "id",
+      },
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE",
     },
 
     title: {
@@ -103,6 +115,14 @@ Notification.init(
     timestamps: true,
     createdAt: "created_at",
     updatedAt: false,
+    indexes: [
+      {
+        fields: ["user_id", "created_at"],
+      },
+      {
+        fields: ["user_id", "status"],
+      },
+    ],
   }
 );
 

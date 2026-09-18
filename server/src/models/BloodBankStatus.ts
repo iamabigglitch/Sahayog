@@ -60,6 +60,8 @@ BloodBankStatus.init(
         model: "hospitals",
         key: "id",
       },
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE",
     },
 
     blood_group: {
@@ -106,6 +108,9 @@ BloodBankStatus.init(
       {
         unique: true,
         fields: ["hospital_id", "blood_group"],
+      },
+      {
+        fields: ["hospital_id", "status"],
       },
     ],
   }

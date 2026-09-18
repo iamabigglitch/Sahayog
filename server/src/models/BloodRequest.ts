@@ -84,11 +84,23 @@ BloodRequest.init(
     hospital_id: {
       type: DataTypes.UUID,
       allowNull: false,
+      references: {
+        model: "hospitals",
+        key: "id",
+      },
+      onDelete: "RESTRICT",
+      onUpdate: "CASCADE",
     },
 
     city_id: {
       type: DataTypes.UUID,
       allowNull: false,
+      references: {
+        model: "cities",
+        key: "id",
+      },
+      onDelete: "RESTRICT",
+      onUpdate: "CASCADE",
     },
 
     requester_name: {
@@ -135,6 +147,17 @@ BloodRequest.init(
     timestamps: true,
     createdAt: "created_at",
     updatedAt: false,
+    indexes: [
+      {
+        fields: ["status", "expires_at"],
+      },
+      {
+        fields: ["city_id", "status"],
+      },
+      {
+        fields: ["hospital_id"],
+      },
+    ],
   }
 );
 

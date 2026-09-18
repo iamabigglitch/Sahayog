@@ -51,11 +51,23 @@ CampRSVP.init(
     donor_id: {
       type: DataTypes.UUID,
       allowNull: false,
+      references: {
+        model: "donor_profiles",
+        key: "id",
+      },
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE",
     },
 
     camp_id: {
       type: DataTypes.UUID,
       allowNull: false,
+      references: {
+        model: "donation_camps",
+        key: "id",
+      },
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE",
     },
 
     status: {
@@ -79,6 +91,9 @@ CampRSVP.init(
     {
       unique: true,
       fields: ["donor_id", "camp_id"],
+    },
+    {
+      fields: ["camp_id", "status"],
     },
   ],
 }

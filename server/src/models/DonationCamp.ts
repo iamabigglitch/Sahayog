@@ -64,21 +64,25 @@ DonationCamp.init(
     },
 
     city_id: {
-    type: DataTypes.UUID,
-    allowNull: false,
-    references: {
-    model: "cities",
-    key: "id",
-    },
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: "cities",
+        key: "id",
+      },
+      onDelete: "RESTRICT",
+      onUpdate: "CASCADE",
     },
 
     hospital_id: {
-    type: DataTypes.UUID,
-    allowNull: true,
-    references: {
-    model: "hospitals",
-    key: "id",
-    },
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: "hospitals",
+        key: "id",
+      },
+      onDelete: "SET NULL",
+      onUpdate: "CASCADE",
     },
 
     title: {
@@ -133,6 +137,17 @@ DonationCamp.init(
     timestamps: true,
     createdAt: "created_at",
     updatedAt: false,
+    indexes: [
+      {
+        fields: ["city_id", "camp_date"],
+      },
+      {
+        fields: ["status", "camp_date"],
+      },
+      {
+        fields: ["hospital_id"],
+      },
+    ],
   }
 );
 

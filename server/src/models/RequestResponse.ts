@@ -50,11 +50,23 @@ RequestResponse.init(
     request_id: {
       type: DataTypes.UUID,
       allowNull: false,
+      references: {
+        model: "blood_requests",
+        key: "id",
+      },
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE",
     },
 
     donor_id: {
       type: DataTypes.UUID,
       allowNull: false,
+      references: {
+        model: "donor_profiles",
+        key: "id",
+      },
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE",
     },
 
     status: {
@@ -72,6 +84,15 @@ RequestResponse.init(
     sequelize,
     tableName: "request_responses",
     timestamps: false,
+    indexes: [
+      {
+        unique: true,
+        fields: ["request_id", "donor_id"],
+      },
+      {
+        fields: ["donor_id", "status"],
+      },
+    ],
   }
 );
 

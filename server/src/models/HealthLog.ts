@@ -50,6 +50,12 @@ HealthLog.init(
     donor_id: {
       type: DataTypes.UUID,
       allowNull: false,
+      references: {
+        model: "donor_profiles",
+        key: "id",
+      },
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE",
     },
 
     hemoglobin: {
@@ -76,6 +82,11 @@ HealthLog.init(
     sequelize,
     tableName: "health_logs",
     timestamps: false,
+    indexes: [
+      {
+        fields: ["donor_id", "logged_at"],
+      },
+    ],
   }
 );
 

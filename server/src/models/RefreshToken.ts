@@ -80,6 +80,15 @@ RefreshToken.init(
     timestamps: true,
     createdAt: "created_at",
     updatedAt: false,
+    indexes: [
+      {
+        unique: true,
+        fields: ["user_id", "token_hash"],
+      },
+      {
+        fields: ["user_id", "expires_at"],
+      },
+    ],
   }
 );
 

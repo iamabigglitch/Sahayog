@@ -57,6 +57,8 @@ DonationHistory.init(
         model: "donor_profiles",
         key: "id",
       },
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE",
     },
 
     request_id: {
@@ -66,6 +68,8 @@ DonationHistory.init(
         model: "blood_requests",
         key: "id",
       },
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE",
     },
 
     status: {
@@ -88,6 +92,15 @@ DonationHistory.init(
     timestamps: true,
     createdAt: "created_at",
     updatedAt: false,
+    indexes: [
+      {
+        unique: true,
+        fields: ["donor_id", "request_id"],
+      },
+      {
+        fields: ["donor_id", "donation_date"],
+      },
+    ],
   }
 );
 

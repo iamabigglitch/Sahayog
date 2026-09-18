@@ -88,6 +88,15 @@ OtpVerification.init(
     timestamps: true,
     createdAt: "created_at",
     updatedAt: false,
+    indexes: [
+      {
+        unique: true,
+        fields: ["phone", "purpose"],
+      },
+      {
+        fields: ["expires_at"],
+      },
+    ],
   }
 );
 

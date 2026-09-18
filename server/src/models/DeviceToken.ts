@@ -47,14 +47,14 @@ DeviceToken.init(
     },
 
     user_id: {
-    type: DataTypes.UUID,
-    allowNull: false,
-    references: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
         model: "users",
         key: "id",
-    },
-    onDelete: "CASCADE",
-    onUpdate: "CASCADE",
+      },
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE",
     },
 
     token: {
@@ -84,6 +84,11 @@ DeviceToken.init(
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",
+    indexes: [
+      {
+        fields: ["user_id", "is_active"],
+      },
+    ],
   }
 );
 
