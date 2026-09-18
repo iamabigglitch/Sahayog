@@ -1,0 +1,267 @@
+
+```
+Sahayog
+├─ assets
+│  ├─ logo
+│  └─ screenshots
+├─ client
+│  ├─ eslint.config.js
+│  ├─ index.html
+│  ├─ package-lock.json
+│  ├─ package.json
+│  ├─ public
+│  │  ├─ favicon.svg
+│  │  └─ icons.svg
+│  ├─ README.md
+│  ├─ src
+│  │  ├─ App.css
+│  │  ├─ App.tsx
+│  │  ├─ assets
+│  │  │  ├─ hero.png
+│  │  │  ├─ react.svg
+│  │  │  └─ vite.svg
+│  │  ├─ index.css
+│  │  └─ main.tsx
+│  ├─ tsconfig.app.json
+│  ├─ tsconfig.json
+│  ├─ tsconfig.node.json
+│  └─ vite.config.ts
+├─ docs
+├─ LICENSE
+├─ package-lock.json
+├─ package.json
+├─ README.md
+└─ server
+   ├─ package-lock.json
+   ├─ package.json
+   ├─ src
+   │  ├─ app.ts
+   │  ├─ config
+   │  │  ├─ database.ts
+   │  │  └─ firebase.ts
+   │  ├─ controllers
+   │  │  ├─ adminController.ts
+   │  │  ├─ authController.ts
+   │  │  ├─ bloodBankStatusController.ts
+   │  │  ├─ bloodRequestController.ts
+   │  │  ├─ campRSVPController.ts
+   │  │  ├─ deviceTokenController.ts
+   │  │  ├─ donationCampController.ts
+   │  │  ├─ donationHistoryController.ts
+   │  │  ├─ donorMatchingController.ts
+   │  │  ├─ donorProfileController.ts
+   │  │  ├─ notificationController.ts
+   │  │  └─ requestResponseController.ts
+   │  ├─ middleware
+   │  │  ├─ adminMiddleware.ts
+   │  │  ├─ authMiddleware.ts
+   │  │  ├─ rateLimiterMiddleware.ts
+   │  │  └─ validationMiddleware.ts
+   │  ├─ models
+   │  │  ├─ BloodBankStatus.ts
+   │  │  ├─ BloodRequest.ts
+   │  │  ├─ CampRSVP.ts
+   │  │  ├─ City.ts
+   │  │  ├─ DeviceToken.ts
+   │  │  ├─ DonationCamp.ts
+   │  │  ├─ DonationHistory.ts
+   │  │  ├─ DonorProfile.ts
+   │  │  ├─ HealthLog.ts
+   │  │  ├─ Hospital.ts
+   │  │  ├─ index.ts
+   │  │  ├─ Notification.ts
+   │  │  ├─ OtpVerification.ts
+   │  │  ├─ RefreshToken.ts
+   │  │  ├─ RequestResponse.ts
+   │  │  └─ User.ts
+   │  ├─ routes
+   │  │  ├─ adminRoutes.ts
+   │  │  ├─ authRoutes.ts
+   │  │  ├─ bloodBankStatusRoutes.ts
+   │  │  ├─ bloodRequestRoutes.ts
+   │  │  ├─ campRSVPRoutes.ts
+   │  │  ├─ deviceTokenRoutes.ts
+   │  │  ├─ donationCampRoutes.ts
+   │  │  ├─ donationHistoryRoutes.ts
+   │  │  ├─ donorMatchingRoutes.ts
+   │  │  ├─ donorProfileRoutes.ts
+   │  │  ├─ notificationRoutes.ts
+   │  │  └─ requestResponseRoutes.ts
+   │  ├─ schemas
+   │  │  ├─ adminSchemas.ts
+   │  │  ├─ authSchemas.ts
+   │  │  ├─ bloodBankStatusSchemas.ts
+   │  │  ├─ bloodRequestSchemas.ts
+   │  │  ├─ deviceTokenSchemas.ts
+   │  │  ├─ donationCampSchemas.ts
+   │  │  ├─ donationHistorySchemas.ts
+   │  │  ├─ donorMatchingSchemas.ts
+   │  │  ├─ donorProfileSchemas.ts
+   │  │  ├─ notificationSchemas.ts
+   │  │  └─ requestResponseSchemas.ts
+   │  ├─ server.ts
+   │  ├─ services
+   │  │  ├─ adminService.ts
+   │  │  ├─ authService.ts
+   │  │  ├─ bloodBankStatusService.ts
+   │  │  ├─ bloodRequestService.ts
+   │  │  ├─ deviceTokenService.ts
+   │  │  ├─ donationCampService.ts
+   │  │  ├─ donationHistoryService.ts
+   │  │  ├─ donorMatchingService.ts
+   │  │  ├─ donorProfileService.ts
+   │  │  ├─ fcmService.ts
+   │  │  ├─ notificationDeliveryService.ts
+   │  │  ├─ notificationService.ts
+   │  │  ├─ otpService.ts
+   │  │  ├─ requestBroadcastService.ts
+   │  │  ├─ requestExpiryService.ts
+   │  │  └─ requestResponseService.ts
+   │  ├─ types
+   │  │  ├─ authtypes.ts
+   │  │  ├─ enums.ts
+   │  │  └─ express.d.ts
+   │  └─ utils
+   │     ├─ bloodCompatibility.ts
+   │     ├─ distance.ts
+   │     ├─ donorEligibility.ts
+   │     ├─ jwtUtil.ts
+   │     ├─ matchingScore.ts
+   │     ├─ otpUtil.ts
+   │     └─ passwordUtil.ts
+   └─ tsconfig.json
+
+```
+```
+Sahayog
+├─ assets
+│  ├─ logo
+│  └─ screenshots
+├─ client
+│  ├─ eslint.config.js
+│  ├─ index.html
+│  ├─ package-lock.json
+│  ├─ package.json
+│  ├─ public
+│  │  ├─ favicon.svg
+│  │  └─ icons.svg
+│  ├─ README.md
+│  ├─ src
+│  │  ├─ App.css
+│  │  ├─ App.tsx
+│  │  ├─ assets
+│  │  │  ├─ hero.png
+│  │  │  ├─ react.svg
+│  │  │  └─ vite.svg
+│  │  ├─ index.css
+│  │  └─ main.tsx
+│  ├─ tsconfig.app.json
+│  ├─ tsconfig.json
+│  ├─ tsconfig.node.json
+│  └─ vite.config.ts
+├─ docs
+├─ LICENSE
+├─ package-lock.json
+├─ package.json
+├─ README.md
+└─ server
+   ├─ package-lock.json
+   ├─ package.json
+   ├─ src
+   │  ├─ app.ts
+   │  ├─ config
+   │  │  ├─ database.ts
+   │  │  └─ firebase.ts
+   │  ├─ controllers
+   │  │  ├─ adminController.ts
+   │  │  ├─ authController.ts
+   │  │  ├─ bloodBankStatusController.ts
+   │  │  ├─ bloodRequestController.ts
+   │  │  ├─ campRSVPController.ts
+   │  │  ├─ deviceTokenController.ts
+   │  │  ├─ donationCampController.ts
+   │  │  ├─ donationHistoryController.ts
+   │  │  ├─ donorMatchingController.ts
+   │  │  ├─ donorProfileController.ts
+   │  │  ├─ notificationController.ts
+   │  │  └─ requestResponseController.ts
+   │  ├─ middleware
+   │  │  ├─ adminMiddleware.ts
+   │  │  ├─ authMiddleware.ts
+   │  │  ├─ rateLimiterMiddleware.ts
+   │  │  └─ validationMiddleware.ts
+   │  ├─ models
+   │  │  ├─ BloodBankStatus.ts
+   │  │  ├─ BloodRequest.ts
+   │  │  ├─ CampRSVP.ts
+   │  │  ├─ City.ts
+   │  │  ├─ DeviceToken.ts
+   │  │  ├─ DonationCamp.ts
+   │  │  ├─ DonationHistory.ts
+   │  │  ├─ DonorProfile.ts
+   │  │  ├─ HealthLog.ts
+   │  │  ├─ Hospital.ts
+   │  │  ├─ index.ts
+   │  │  ├─ Notification.ts
+   │  │  ├─ OtpVerification.ts
+   │  │  ├─ RefreshToken.ts
+   │  │  ├─ RequestResponse.ts
+   │  │  └─ User.ts
+   │  ├─ routes
+   │  │  ├─ adminRoutes.ts
+   │  │  ├─ authRoutes.ts
+   │  │  ├─ bloodBankStatusRoutes.ts
+   │  │  ├─ bloodRequestRoutes.ts
+   │  │  ├─ campRSVPRoutes.ts
+   │  │  ├─ deviceTokenRoutes.ts
+   │  │  ├─ donationCampRoutes.ts
+   │  │  ├─ donationHistoryRoutes.ts
+   │  │  ├─ donorMatchingRoutes.ts
+   │  │  ├─ donorProfileRoutes.ts
+   │  │  ├─ notificationRoutes.ts
+   │  │  └─ requestResponseRoutes.ts
+   │  ├─ schemas
+   │  │  ├─ adminSchemas.ts
+   │  │  ├─ authSchemas.ts
+   │  │  ├─ bloodBankStatusSchemas.ts
+   │  │  ├─ bloodRequestSchemas.ts
+   │  │  ├─ deviceTokenSchemas.ts
+   │  │  ├─ donationCampSchemas.ts
+   │  │  ├─ donationHistorySchemas.ts
+   │  │  ├─ donorMatchingSchemas.ts
+   │  │  ├─ donorProfileSchemas.ts
+   │  │  ├─ notificationSchemas.ts
+   │  │  └─ requestResponseSchemas.ts
+   │  ├─ server.ts
+   │  ├─ services
+   │  │  ├─ adminService.ts
+   │  │  ├─ authService.ts
+   │  │  ├─ bloodBankStatusService.ts
+   │  │  ├─ bloodRequestService.ts
+   │  │  ├─ deviceTokenService.ts
+   │  │  ├─ donationCampService.ts
+   │  │  ├─ donationHistoryService.ts
+   │  │  ├─ donorMatchingService.ts
+   │  │  ├─ donorProfileService.ts
+   │  │  ├─ fcmService.ts
+   │  │  ├─ notificationDeliveryService.ts
+   │  │  ├─ notificationService.ts
+   │  │  ├─ otpService.ts
+   │  │  ├─ requestBroadcastService.ts
+   │  │  ├─ requestExpiryService.ts
+   │  │  └─ requestResponseService.ts
+   │  ├─ types
+   │  │  ├─ authtypes.ts
+   │  │  ├─ enums.ts
+   │  │  └─ express.d.ts
+   │  └─ utils
+   │     ├─ bloodCompatibility.ts
+   │     ├─ distance.ts
+   │     ├─ donorEligibility.ts
+   │     ├─ jwtUtil.ts
+   │     ├─ matchingScore.ts
+   │     ├─ otpUtil.ts
+   │     └─ passwordUtil.ts
+   └─ tsconfig.json
+
+```

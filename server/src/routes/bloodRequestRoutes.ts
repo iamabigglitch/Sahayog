@@ -19,7 +19,9 @@ import {
 
 const router = Router();
 
-
+// Emergency requester flow is intentionally public. Requesters can submit
+// urgent blood requests without an account; donor and admin flows remain
+// authenticated and protected by ownership/admin checks elsewhere.
 router.post(
   "/",
   authRateLimiter,

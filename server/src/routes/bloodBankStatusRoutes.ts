@@ -20,8 +20,8 @@ import {
 } from "../middleware/authMiddleware";
 
 import {
-  authorize,
-} from "../middleware/authMiddleware";
+  requireAdmin,
+} from "../middleware/adminMiddleware";
 
 import {
   authRateLimiter,
@@ -59,7 +59,7 @@ router.get(
 router.patch(
   "/",
   authenticate,
-  authorize("admin" as any),
+  requireAdmin,
   authRateLimiter,
   validate(upsertBloodBankStatusSchema),
   upsertBloodBankStatus

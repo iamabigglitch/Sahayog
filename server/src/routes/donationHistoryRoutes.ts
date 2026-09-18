@@ -20,16 +20,15 @@ import {
 
 import {
   authenticate,
-  authorize,
 } from "../middleware/authMiddleware";
+
+import {
+  requireAdmin,
+} from "../middleware/adminMiddleware";
 
 import {
   authRateLimiter,
 } from "../middleware/rateLimiterMiddleware";
-
-import {
-  UserRole,
-} from "../types/enums";
 
 
 const router = Router();
@@ -59,7 +58,7 @@ router.get(
 router.post(
   "/",
   authenticate,
-  authorize(UserRole.ADMIN),
+  requireAdmin,
   authRateLimiter,
   validate(
     createDonationHistorySchema
@@ -72,7 +71,7 @@ router.post(
 router.patch(
   "/:id/status",
   authenticate,
-  authorize(UserRole.ADMIN),
+  requireAdmin,
   authRateLimiter,
   validate(
     updateDonationStatusSchema

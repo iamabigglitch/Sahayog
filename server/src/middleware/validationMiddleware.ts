@@ -4,7 +4,7 @@ import {
   NextFunction,
 } from "express";
 
-import { ZodSchema } from "zod";
+import { ZodSchema, ZodError } from "zod";
 
 type ValidationTarget =
   | "body"
@@ -39,11 +39,13 @@ export const validate = (
 
       next();
     } catch (error) {
-      if (error instanceof Error) {
+      if (error instanceof ZodError) {
         res.status(400).json({
           error: {
             code: "VALIDATION_ERROR",
-            message: error.message,
+            message: error.issues
+              .map((issue) => issue.message)
+              .join(", "),
           },
         });
 
@@ -59,4 +61,3 @@ export const validate = (
     }
   };
 };
-

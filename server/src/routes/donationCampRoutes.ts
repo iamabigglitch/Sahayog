@@ -1,6 +1,7 @@
 import { Router } from "express";
 
 import { authenticate } from "../middleware/authMiddleware";
+import { requireAdmin } from "../middleware/adminMiddleware";
 import { validate } from "../middleware/validationMiddleware";
 
 import {
@@ -27,6 +28,7 @@ router.get("/:id", getDonationCamp);
 router.post(
   "/",
   authenticate,
+  requireAdmin,
   validate(createDonationCampSchema),
   createDonationCamp
 );
@@ -34,6 +36,7 @@ router.post(
 router.patch(
   "/:id",
   authenticate,
+  requireAdmin,
   validate(updateDonationCampSchema),
   updateDonationCamp
 );
@@ -41,6 +44,7 @@ router.patch(
 router.patch(
   "/:id/status",
   authenticate,
+  requireAdmin,
   validate(updateCampStatusSchema),
   updateDonationCampStatus
 );
