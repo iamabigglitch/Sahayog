@@ -17,3 +17,8 @@ Thumbs.db
 
 # Firebase Admin credentials
 *-firebase-adminsdk-*.json
+
+# Local Firebase service account (do not commit)
+server/firebase-service-account.json
+server/*-service-account.json
+*.firebase-service-account.json

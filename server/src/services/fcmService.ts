@@ -3,7 +3,7 @@ import {
   Message,
 } from "firebase-admin/messaging";
 
-import firebaseAdmin from "../config/firebase";
+import firebaseAdmin, { firebaseInitialized } from "../config/firebase";
 
 export interface FcmNotificationData {
   token: string;
@@ -16,6 +16,12 @@ export class FcmService {
   static async sendNotification(
     notificationData: FcmNotificationData
   ): Promise<string> {
+    if (!firebaseInitialized || !firebaseAdmin) {
+      throw new Error(
+        "Firebase is not configured — push notification delivery is disabled"
+      );
+    }
+
     const {
       token,
       title,
