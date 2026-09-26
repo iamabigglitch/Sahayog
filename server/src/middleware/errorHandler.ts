@@ -53,6 +53,11 @@ export const errorHandler = (
 
   // Generic fallback
   console.error("Unhandled error:", err);
+  if (err instanceof Error) {
+    console.error("Unhandled error name:", err.name);
+    console.error("Unhandled error message:", err.message);
+    console.error("Unhandled error stack:", err.stack);
+  }
   res.status(500).json({
     error: {
       code: "INTERNAL_SERVER_ERROR",

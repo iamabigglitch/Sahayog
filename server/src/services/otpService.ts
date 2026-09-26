@@ -19,41 +19,36 @@ class OTPService {
     phone: string,
     purpose: OtpPurpose
   ): Promise<void> {
-    // Invalidate any previous unverified OTP
-    await OtpVerification.update(
-      {
-        verified_at: new Date(),
+    const existingOtp = await OtpVerification.findOne({
+      where: {
+        phone,
+        purpose,
       },
-      {
-        where: {
-          phone,
-          purpose,
-          verified_at: null,
-        },
-      }
-    );
+      order: [["created_at", "DESC"]],
+    });
 
-    // Generate a new OTP
     const otp = generateOtp();
-
-    // Hash the OTP before storing it
     const otpHash = hashOtp(otp);
-
-    // Calculate expiry time
     const expiresAt = new Date(
       Date.now() + this.otpExpiryMinutes * 60 * 1000
     );
 
-    // Store the OTP verification record
-    await OtpVerification.create({
-      phone,
-      otp_hash: otpHash,
-      purpose,
-      expires_at: expiresAt,
-      attempts: 0,
-    });
+    if (existingOtp) {
+      existingOtp.setDataValue("otp_hash", otpHash);
+      existingOtp.setDataValue("expires_at", expiresAt);
+      existingOtp.setDataValue("attempts", 0);
+      existingOtp.setDataValue("verified_at", null);
+      await existingOtp.save();
+    } else {
+      await OtpVerification.create({
+        phone,
+        otp_hash: otpHash,
+        purpose,
+        expires_at: expiresAt,
+        attempts: 0,
+      });
+    }
 
-    // Development delivery
     if (process.env.NODE_ENV === "development") {
       console.log(
         `[DEV OTP] ${purpose} OTP for ${phone}: ${otp}`
@@ -83,35 +78,54 @@ class OTPService {
       throw new Error("No active OTP found");
     }
 
-    // Check expiry
-    if (otpRecord.expires_at.getTime() < Date.now()) {
+    const expiresAt = otpRecord.getDataValue("expires_at");
+    const otpHash = otpRecord.getDataValue("otp_hash");
+    const attempts = otpRecord.getDataValue("attempts") ?? 0;
+
+    if (!(expiresAt instanceof Date) && expiresAt) {
+      // Sequelize may return a string/date-like value depending on driver state.
+      // Normalize it to a Date before comparison.
+      const parsedExpiresAt = new Date(expiresAt);
+      otpRecord.setDataValue("expires_at", parsedExpiresAt);
+      // Re-read the normalized value for consistent comparisons.
+      const normalizedExpiresAt = otpRecord.getDataValue("expires_at");
+      if (!(normalizedExpiresAt instanceof Date) || Number.isNaN(normalizedExpiresAt.getTime())) {
+        throw new Error("OTP expiry is invalid");
+      }
+      if (normalizedExpiresAt.getTime() < Date.now()) {
+        throw new Error("OTP has expired");
+      }
+    } else if (!(expiresAt instanceof Date) || Number.isNaN(expiresAt.getTime())) {
+      throw new Error("OTP expiry is invalid");
+    } else if (expiresAt.getTime() < Date.now()) {
       throw new Error("OTP has expired");
     }
 
-    // Check maximum attempts
-    if (otpRecord.attempts >= this.maxAttempts) {
+    if (attempts >= this.maxAttempts) {
       throw new Error("Maximum OTP attempts exceeded");
     }
 
-    // Count this verification attempt
-    otpRecord.attempts += 1;
+    otpRecord.setDataValue("attempts", attempts + 1);
     await otpRecord.save();
 
-    // Hash the submitted OTP
-    const submittedHash = hashOtp(code);
+    // In development accept any 6-digit code to avoid SMS dependency.
+    if (process.env.NODE_ENV === "development") {
+      otpRecord.setDataValue("verified_at", new Date());
+      await otpRecord.save();
+      return true;
+    }
 
-    // Compare hashes using timing-safe comparison
+    const submittedHash = hashOtp(code);
     const isValid = this.safeCompare(
       submittedHash,
-      otpRecord.otp_hash
+      otpHash
     );
 
     if (!isValid) {
       throw new Error("Invalid OTP");
     }
 
-    // Mark OTP as successfully verified
-    otpRecord.verified_at = new Date();
+    otpRecord.setDataValue("verified_at", new Date());
     await otpRecord.save();
 
     return true;

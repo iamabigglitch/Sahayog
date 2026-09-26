@@ -4,16 +4,12 @@ import { BloodGroup } from "../types/enums";
 
 
 // Phone number validation
+// Phone number validation — Nepali mobile numbers are exactly 10 digits
 const phoneSchema = z
   .string()
   .trim()
-  .min(10, "Phone number must be at least 10 digits")
-  .max(15, "Phone number must not exceed 15 digits")
-  .regex(
-    /^\+?[0-9]+$/,
-    "Phone number must contain only digits and may start with +"
-  );
-
+  .length(10, "Phone number must be exactly 10 digits")
+  .regex(/^[0-9]{10}$/, "Phone number must contain only digits");
 
 // Password validation
 const passwordSchema = z

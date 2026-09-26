@@ -59,9 +59,12 @@ const createTokenPair = async (
   user: User,
   transaction?: Transaction
 ) => {
+  const userId = user.getDataValue("id");
+  const role = user.getDataValue("role");
+
   const payload: JwtPayload = {
-    userId: user.id,
-    role: user.role,
+    userId,
+    role,
   };
 
   const accessToken = signAccessToken(payload);
@@ -69,7 +72,7 @@ const createTokenPair = async (
 
   await RefreshToken.create(
     {
-      user_id: user.id,
+      user_id: userId,
       token_hash: hashRefreshToken(refreshToken),
       expires_at: getRefreshTokenExpiry(refreshToken),
     },
@@ -171,10 +174,12 @@ export class AuthService {
         }
       );
 
+      const userId = user.getDataValue("id");
+
       // Create donor profile
       await DonorProfile.create(
         {
-          user_id: user.id,
+          user_id: userId,
           blood_group: bloodGroup,
           city_id: cityId,
         },
@@ -199,10 +204,10 @@ export class AuthService {
 
       return {
         user: {
-          id: user.id,
-          phone: user.phone,
-          role: user.role,
-          phone_verified: user.phone_verified,
+          id: user.getDataValue("id"),
+          phone: user.getDataValue("phone"),
+          role: user.getDataValue("role"),
+          phone_verified: user.getDataValue("phone_verified"),
         },
 
         ...tokens,
@@ -251,10 +256,10 @@ export class AuthService {
 
     return {
       user: {
-        id: user.id,
-        phone: user.phone,
-        role: user.role,
-        phone_verified: user.phone_verified,
+        id: user.getDataValue("id"),
+        phone: user.getDataValue("phone"),
+        role: user.getDataValue("role"),
+        phone_verified: user.getDataValue("phone_verified"),
       },
 
       ...tokens,

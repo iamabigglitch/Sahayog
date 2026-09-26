@@ -21,8 +21,11 @@ async function startServer() {
     console.log("Database connected successfully!");
 
 
-    // Create tables if they don't exist
-    await sequelize.sync({ alter: true });
+    // Avoid automatic schema alterations on startup.
+    // In this project the database is managed separately, and
+    // Sequelize's `alter: true` can trigger PostgreSQL index-cache
+    // failures on an existing database during local development.
+    await sequelize.sync();
 
     console.log("Database synchronized!");
 
