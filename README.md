@@ -1,9 +1,6 @@
 
 ```
 Sahayog
-├─ assets
-│  ├─ logo
-│  └─ screenshots
 ├─ client
 │  ├─ eslint.config.js
 │  ├─ index.html
@@ -20,13 +17,21 @@ Sahayog
 │  │  │  ├─ hero.png
 │  │  │  ├─ react.svg
 │  │  │  └─ vite.svg
+│  │  ├─ components
+│  │  │  ├─ Navbar.tsx
+│  │  │  └─ ProtectedRoute.tsx
+│  │  ├─ context
+│  │  │  └─ AuthContext.tsx
 │  │  ├─ index.css
-│  │  └─ main.tsx
+│  │  ├─ lib
+│  │  │  └─ api.ts
+│  │  ├─ main.tsx
+│  │  └─ pages
+│  │     └─ Home.tsx
 │  ├─ tsconfig.app.json
 │  ├─ tsconfig.json
 │  ├─ tsconfig.node.json
 │  └─ vite.config.ts
-├─ docs
 ├─ LICENSE
 ├─ package-lock.json
 ├─ package.json
@@ -55,6 +60,7 @@ Sahayog
    │  ├─ middleware
    │  │  ├─ adminMiddleware.ts
    │  │  ├─ authMiddleware.ts
+   │  │  ├─ errorHandler.ts
    │  │  ├─ rateLimiterMiddleware.ts
    │  │  └─ validationMiddleware.ts
    │  ├─ models
@@ -122,6 +128,8 @@ Sahayog
    │  │  ├─ enums.ts
    │  │  └─ express.d.ts
    │  └─ utils
+   │     ├─ apiError.ts
+   │     ├─ asyncHandler.ts
    │     ├─ bloodCompatibility.ts
    │     ├─ distance.ts
    │     ├─ donorEligibility.ts
