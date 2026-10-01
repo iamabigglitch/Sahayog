@@ -9,6 +9,7 @@ interface RegistrationState {
   password: string;
   bloodGroup: string;
   cityId: string;
+  devOtp?: string;
 }
 
 function VerifyOtp() {
@@ -64,6 +65,12 @@ function VerifyOtp() {
           We sent a 6-digit code to {state.phone}. Enter it below to finish
           setting up your account.
         </p>
+
+        {state.devOtp && (
+          <p className="auth-subtitle" style={{ color: "#b45309", marginTop: 8 }}>
+            Development OTP: {state.devOtp}
+          </p>
+        )}
 
         <form onSubmit={handleSubmit}>
           <FormInput

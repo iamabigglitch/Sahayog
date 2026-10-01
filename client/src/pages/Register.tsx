@@ -1,21 +1,14 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../lib/api";
 import { FormInput, FormSelect, SubmitButton } from "../components/FormElements";
 
 const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
-// Hardcoded for now to unblock development — matches real rows in the
-// cities table. Revisit via GET /cities once the CORS issue is sorted,
-// so this doesn't silently drift if cities are ever added/changed in the DB.
-const CITIES = [
-  { id: "8acf0b9e-9a5a-4096-894c-046988ad1234", name: "Bhaktapur" },
-  { id: "9771f7ce-966d-42a3-a009-904d6b7c00a4", name: "Biratnagar" },
-  { id: "e2c684fa-05cc-4558-8f2c-ac6d2b9da33b", name: "Birgunj" },
-  { id: "304dc55d-641f-4447-9dc9-02d09b1c55c4", name: "Kathmandu" },
-  { id: "3781ac36-a652-4b41-a0de-5b718791e8d5", name: "Lalitpur" },
-  { id: "c6676af2-044a-419d-9a82-d326b9f98dcc", name: "Pokhara" },
-];
+interface CityOption {
+  id: string;
+  name: string;
+}
 
 function Register() {
   const navigate = useNavigate();
@@ -24,9 +17,30 @@ function Register() {
   const [password, setPassword] = useState("");
   const [bloodGroup, setBloodGroup] = useState("");
   const [cityId, setCityId] = useState("");
+  const [cities, setCities] = useState<CityOption[]>([]);
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingCities, setIsLoadingCities] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    const fetchCities = async () => {
+      try {
+        const response = await api.get("/cities");
+        const cityList = response.data?.cities ?? [];
+        setCities(cityList);
+      } catch (error: any) {
+        const message =
+          error.response?.data?.error?.message ??
+          "Unable to load cities right now. Please refresh the page.";
+        setErrorMessage(message);
+      } finally {
+        setIsLoadingCities(false);
+      }
+    };
+
+    fetchCities();
+  }, []);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -34,20 +48,26 @@ function Register() {
     setIsLoading(true);
 
     try {
-      await api.post("/auth/register", {
+      const response = await api.post("/auth/register", {
         phone,
         password,
         bloodGroup,
         cityId,
       });
 
+      const devOtp = response.data?.otp;
+
       navigate("/verify-otp", {
-        state: { phone, password, bloodGroup, cityId },
+        state: { phone, password, bloodGroup, cityId, devOtp },
       });
     } catch (error: any) {
-      setErrorMessage(
-        error.response?.data?.error?.message ?? "Registration failed. Please try again."
-      );
+      const backendMessage =
+        error.response?.data?.error?.message ??
+        error.response?.data?.message ??
+        error.message ??
+        "Registration failed. Please try again.";
+
+      setErrorMessage(backendMessage);
     } finally {
       setIsLoading(false);
     }
@@ -93,13 +113,14 @@ function Register() {
             label="City"
             value={cityId}
             onChange={setCityId}
-            options={CITIES.map((city) => ({ value: city.id, label: city.name }))}
+            options={cities.map((city) => ({ value: city.id, label: city.name }))}
+            placeholder={isLoadingCities ? "Loading cities..." : "Select your city"}
             required
           />
 
           {errorMessage && <p className="auth-error">{errorMessage}</p>}
 
-          <SubmitButton isLoading={isLoading}>Send verification code</SubmitButton>
+          <SubmitButton isLoading={isLoading || isLoadingCities}>Send verification code</SubmitButton>
         </form>
 
         <p className="auth-switch">
