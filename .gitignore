@@ -22,3 +22,6 @@ Thumbs.db
 server/firebase-service-account.json
 server/*-service-account.json
 *.firebase-service-account.json
+
+# Temporary local files
+server/token.txt
