@@ -11,18 +11,37 @@ import campRSVPRoutes from "./routes/campRSVPRoutes";
 import adminRoutes from "./routes/adminRoutes";
 import deviceTokenRoutes from "./routes/deviceTokenRoutes";
 import cityRoutes from "./routes/cityRoutes";
+import hospitalRoutes from "./routes/hospitalRoutes";
+import donorProfileRoutes from "./routes/donorProfileRoutes";
 
 
 const app = express();
 
 import cors from "cors";
 
-const allowedOrigins = ["http://localhost:5173", "http://127.0.0.1:5173"];
+const isLocalDevelopmentOrigin = (origin: string): boolean => {
+  try {
+    const { hostname, port } = new URL(origin);
+    const isLocalHostname =
+      ["localhost", "127.0.0.1", "0.0.0.0", "::1"].includes(hostname) ||
+      hostname.startsWith("192.168.") ||
+      hostname.startsWith("10.") ||
+      hostname.startsWith("172.");
+
+    if (!isLocalHostname) {
+      return false;
+    }
+
+    return port === "" || port.startsWith("517") || port.startsWith("300") || port.startsWith("417");
+  } catch {
+    return false;
+  }
+};
+
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (e.g., server-to-server, curl) and known dev origins
     if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1) return callback(null, true);
+    if (isLocalDevelopmentOrigin(origin)) return callback(null, true);
     return callback(new Error("CORS policy: Origin not allowed"));
   },
   credentials: true,
@@ -44,6 +63,8 @@ app.use("/api/v1/camp-rsvps", campRSVPRoutes);
 app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/notifications/devices", deviceTokenRoutes);
 app.use("/api/v1/cities", cityRoutes);
+app.use("/api/v1/hospitals", hospitalRoutes);
+app.use("/api/v1/donors", donorProfileRoutes);
 
 // Centralized error handler (last middleware)
 import { errorHandler } from "./middleware/errorHandler";
