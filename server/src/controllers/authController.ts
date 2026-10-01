@@ -88,13 +88,20 @@ export const login = async (
 
     res.status(200).json(result);
   } catch (error) {
-    res.status(401).json({
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Login failed";
+
+    const statusCode =
+      error instanceof Error && error.message === "Invalid phone number or password"
+        ? 401
+        : 400;
+
+    res.status(statusCode).json({
       error: {
         code: "LOGIN_FAILED",
-        message:
-          error instanceof Error
-            ? error.message
-            : "Login failed",
+        message,
       },
     });
   }

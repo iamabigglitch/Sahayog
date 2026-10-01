@@ -60,7 +60,7 @@ const createTokenPair = async (
   transaction?: Transaction
 ) => {
   const userId = user.getDataValue("id");
-  const role = user.getDataValue("role");
+  const role = user.getDataValue("role") as UserRole;
 
   const payload: JwtPayload = {
     userId,
@@ -116,13 +116,14 @@ export class AuthService {
      * This avoids creating an unverified User row.
      */
 
-    await OTPService.sendOtp(
+    const otp = await OTPService.sendOtp(
       phone,
       OtpPurpose.REGISTRATION
     );
 
     return {
       message: "OTP sent successfully",
+      ...(process.env.NODE_ENV !== "production" ? { otp } : {}),
     };
   }
 
@@ -235,10 +236,13 @@ export class AuthService {
       throw new ApiError(401, "INVALID_CREDENTIALS", "Invalid phone number or password");
     }
 
-    // Compare supplied password with stored hash
+    const storedPasswordHash = user.getDataValue("password_hash");
+    const phoneVerified = user.getDataValue("phone_verified");
+
+    // Compare supplied password with stored hash using the real Sequelize attribute value.
     const passwordMatches = await comparePassword(
       password,
-      user.password_hash
+      storedPasswordHash
     );
 
     if (!passwordMatches) {
@@ -246,8 +250,7 @@ export class AuthService {
     }
 
     // Only verified accounts can log in
-
-    if (!user.phone_verified) {
+    if (!phoneVerified) {
       throw new ApiError(403, "PHONE_NOT_VERIFIED", "Phone number is not verified");
     }
 
@@ -259,7 +262,7 @@ export class AuthService {
         id: user.getDataValue("id"),
         phone: user.getDataValue("phone"),
         role: user.getDataValue("role"),
-        phone_verified: user.getDataValue("phone_verified"),
+        phone_verified: phoneVerified,
       },
 
       ...tokens,

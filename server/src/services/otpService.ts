@@ -18,7 +18,7 @@ class OTPService {
   async sendOtp(
     phone: string,
     purpose: OtpPurpose
-  ): Promise<void> {
+  ): Promise<string> {
     const existingOtp = await OtpVerification.findOne({
       where: {
         phone,
@@ -57,6 +57,8 @@ class OTPService {
 
     // TODO:
     // Production SMS delivery will be added here.
+
+    return otp;
   }
 
   // Verify an OTP
@@ -107,13 +109,6 @@ class OTPService {
 
     otpRecord.setDataValue("attempts", attempts + 1);
     await otpRecord.save();
-
-    // In development accept any 6-digit code to avoid SMS dependency.
-    if (process.env.NODE_ENV === "development") {
-      otpRecord.setDataValue("verified_at", new Date());
-      await otpRecord.save();
-      return true;
-    }
 
     const submittedHash = hashOtp(code);
     const isValid = this.safeCompare(
