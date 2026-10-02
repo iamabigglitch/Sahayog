@@ -56,8 +56,11 @@ export class BloodRequestService {
     }
 
     // Make sure the hospital belongs
-    // to the selected city
-    if (hospital.city_id !== cityId) {
+    // to the selected city. Use the Sequelize raw value rather than
+    // the shadowed public field on the model instance.
+    const hospitalCityId = hospital.getDataValue("city_id");
+
+    if (hospitalCityId !== cityId) {
       throw new Error(
         "Hospital does not belong to the selected city"
       );
@@ -107,10 +110,9 @@ export class BloodRequestService {
 
     // Broadcast the request
     // to suitable donors.
+    const requestId = bloodRequest.getDataValue("id");
     await RequestBroadcastService
-      .broadcastRequest(
-        bloodRequest.id
-      );
+      .broadcastRequest(requestId);
 
     return bloodRequest;
   }
