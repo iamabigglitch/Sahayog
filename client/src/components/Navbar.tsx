@@ -1,12 +1,21 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Heart, Menu, X } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
 
   const closeMenu = () => {
     setMenuOpen(false);
+  };
+
+  const handleLogout = async () => {
+    closeMenu();
+    await logout();
+    navigate("/");
   };
 
   return (
@@ -24,13 +33,25 @@ function Navbar() {
             Home
           </Link>
 
-          <Link to="/login" onClick={closeMenu}>
-            Login
-          </Link>
-
-          <Link to="/register" className="register-button" onClick={closeMenu}>
-            Become a Donor
-          </Link>
+          {isAuthenticated ? (
+            <>
+              <Link to="/dashboard" onClick={closeMenu}>
+                Dashboard
+              </Link>
+              <button type="button" className="register-button" onClick={handleLogout}>
+                Log out
+              </button>
+            </>
+          ) : (
+            <>
+              <Link to="/login" onClick={closeMenu}>
+                Login
+              </Link>
+              <Link to="/register" className="register-button" onClick={closeMenu}>
+                Become a Donor
+              </Link>
+            </>
+          )}
         </nav>
 
         <button
