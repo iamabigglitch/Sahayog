@@ -18,6 +18,25 @@ export interface CreateDonationHistoryData {
 }
 
 export class DonationHistoryService {
+  private static async getDonorProfileForUser(userId: string) {
+    const donor = await DonorProfile.findOne({
+      where: {
+        user_id: userId,
+      },
+    });
+
+    if (!donor) {
+      throw new Error("Donor profile not found for this account");
+    }
+
+    const donorId = donor.getDataValue("id");
+
+    if (!donorId) {
+      throw new Error("Donor profile is missing a valid id");
+    }
+
+    return { donor, donorId };
+  }
 
   // Create Donation History
   // Admin only
@@ -129,23 +148,12 @@ export class DonationHistoryService {
   static async getMyDonationHistory(
     userId: string
   ) {
-    const donor =
-      await DonorProfile.findOne({
-        where: {
-          user_id: userId,
-        },
-      });
-
-    if (!donor) {
-      throw new Error(
-        "Donor profile not found"
-      );
-    }
+    const { donorId } = await this.getDonorProfileForUser(userId);
 
     const history =
       await DonationHistory.findAll({
         where: {
-          donor_id: donor.id,
+          donor_id: donorId,
         },
         order: [
           ["donation_date", "DESC"],
@@ -161,18 +169,7 @@ export class DonationHistoryService {
     donationId: string,
     userId: string
   ) {
-    const donor =
-      await DonorProfile.findOne({
-        where: {
-          user_id: userId,
-        },
-      });
-
-    if (!donor) {
-      throw new Error(
-        "Donor profile not found"
-      );
-    }
+    const { donorId } = await this.getDonorProfileForUser(userId);
 
     const donation =
       await DonationHistory.findByPk(
@@ -187,7 +184,7 @@ export class DonationHistoryService {
 
     // Ownership check
     if (
-      donation.donor_id !== donor.id
+      donation.donor_id !== donorId
     ) {
       throw new Error(
         "You are not allowed to access this donation history"
@@ -277,13 +274,7 @@ export class DonationHistoryService {
       throw new Error("Invalid donation date");
     }
 
-    const donor = await DonorProfile.findOne({
-      where: { user_id: userId },
-    });
-
-    if (!donor) {
-      throw new Error("Donor profile not found");
-    }
+    const { donor, donorId } = await this.getDonorProfileForUser(userId);
 
     const request = await BloodRequest.findByPk(requestId);
 
@@ -304,7 +295,7 @@ export class DonationHistoryService {
     const acceptedResponse = await RequestResponse.findOne({
       where: {
         request_id: requestId,
-        donor_id: donor.id,
+        donor_id: donorId,
         status: ResponseStatus.ACCEPTED,
       },
     });
@@ -320,7 +311,7 @@ export class DonationHistoryService {
     try {
       const existingDonation = await DonationHistory.findOne({
         where: {
-          donor_id: donor.id,
+          donor_id: donorId,
           request_id: requestId,
         },
         transaction,
@@ -334,7 +325,7 @@ export class DonationHistoryService {
 
       const completedDonation = await DonationHistory.create(
         {
-          donor_id: donor.id,
+          donor_id: donorId,
           request_id: requestId,
           status: DonationStatus.COMPLETED,
           donation_date: donationDate,
