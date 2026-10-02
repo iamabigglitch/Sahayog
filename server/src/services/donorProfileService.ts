@@ -14,7 +14,7 @@ export interface UpdateDonorProfileData {
 }
 
 export class DonorProfileService {
-
+ 
   // Always resolves the profile from the authenticated userId,
   // never from a client-supplied profile or donor id.
   static async getMyProfile(userId: string) {
@@ -25,7 +25,13 @@ export class DonorProfileService {
     });
 
     if (!profile) {
-      throw new Error("Donor profile not found");
+      throw new Error("Donor profile not found for this account");
+    }
+
+    const profileId = profile.getDataValue("id");
+
+    if (!profileId) {
+      throw new Error("Donor profile is missing a valid id");
     }
 
     return profile;

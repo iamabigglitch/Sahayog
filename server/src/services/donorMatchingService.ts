@@ -33,9 +33,15 @@ export class DonorMatchingService {
       throw new Error("Blood request not found");
     }
 
+    const requestStatus = bloodRequest.getDataValue("status");
+    const requestExpiresAt = bloodRequest.getDataValue("expires_at");
+    const requestHospitalId = bloodRequest.getDataValue("hospital_id");
+    const requestCityId = bloodRequest.getDataValue("city_id");
+    const requestedBloodGroup = bloodRequest.getDataValue("blood_group_needed");
+
     // 2. Make sure the request is still active
     if (
-      bloodRequest.status !==
+      requestStatus !==
       RequestStatus.REQUESTED
     ) {
       throw new Error(
@@ -45,7 +51,7 @@ export class DonorMatchingService {
 
     // 3. Check request expiry
     if (
-      new Date() >= bloodRequest.expires_at
+      new Date() >= requestExpiresAt
     ) {
       throw new Error(
         "This blood request has expired"
@@ -55,12 +61,15 @@ export class DonorMatchingService {
     // 4. Find the hospital
     const hospital =
       await Hospital.findByPk(
-        bloodRequest.hospital_id
+        requestHospitalId
       );
 
     if (!hospital) {
       throw new Error("Hospital not found");
     }
+
+    const hospitalLatitude = hospital.getDataValue("latitude");
+    const hospitalLongitude = hospital.getDataValue("longitude");
 
     // 5. Get all donor profiles
     const donors =
@@ -70,12 +79,18 @@ export class DonorMatchingService {
 
     // 6. Filter and score donors
     for (const donor of donors) {
+      const donorBloodGroup = donor.getDataValue("blood_group");
+      const donorLatitude = donor.getDataValue("latitude");
+      const donorLongitude = donor.getDataValue("longitude");
+      const donorCityId = donor.getDataValue("city_id");
+      const donorVerified = donor.getDataValue("donor_verified");
+      const donorTrustScore = donor.getDataValue("trust_score");
 
       // Blood compatibility
       const bloodCompatible =
         isBloodGroupCompatible(
-          donor.blood_group,
-          bloodRequest.blood_group_needed
+          donorBloodGroup,
+          requestedBloodGroup
         );
 
       if (!bloodCompatible) {
@@ -93,46 +108,40 @@ export class DonorMatchingService {
         | undefined;
 
       if (
-        donor.latitude !== undefined &&
-        donor.longitude !== undefined &&
-        hospital.latitude !== undefined &&
-        hospital.longitude !== undefined
+        donorLatitude !== undefined &&
+        donorLongitude !== undefined &&
+        hospitalLatitude !== undefined &&
+        hospitalLongitude !== undefined
       ) {
         distanceKm =
           calculateDistanceInKm(
-            Number(donor.latitude),
-            Number(donor.longitude),
-            Number(hospital.latitude),
-            Number(hospital.longitude)
+            Number(donorLatitude),
+            Number(donorLongitude),
+            Number(hospitalLatitude),
+            Number(hospitalLongitude)
           );
       }
 
       // Same city
       const sameCity =
-        donor.city_id ===
-        bloodRequest.city_id;
+        donorCityId ===
+        requestCityId;
 
       // Matching score
       const matchingScore =
         calculateMatchingScore({
           distanceKm,
           sameCity,
-          donorVerified:
-            donor.donor_verified,
-          trustScore:
-            donor.trust_score,
+          donorVerified,
+          trustScore: donorTrustScore,
         });
 
       matches.push({
-        donorId: donor.id,
-        bloodGroup:
-          donor.blood_group,
-        cityId:
-          donor.city_id,
-        donorVerified:
-          donor.donor_verified,
-        trustScore:
-          donor.trust_score,
+        donorId: donor.getDataValue("id"),
+        bloodGroup: donorBloodGroup,
+        cityId: donorCityId,
+        donorVerified,
+        trustScore: donorTrustScore,
         distanceKm,
         matchingScore,
       });
