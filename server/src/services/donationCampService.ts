@@ -5,12 +5,7 @@ import Hospital from "../models/Hospital";
 import City from "../models/City";
 import User from "../models/User";
 
-import {
-  CampStatus,
-  RSVPStatus,
-  OrganizerType,
-  UserRole,
-} from "../types/enums";
+import { CampStatus, RSVPStatus, OrganizerType, UserRole } from "../types/enums";
 
 export interface CreateDonationCampData {
   title: string;
@@ -25,8 +20,10 @@ export interface CreateDonationCampData {
   endTime: string;
 }
 
-export class DonationCampService {
+// The alias must match the association declared in models/index.ts.
+const cityInclude = { model: City, as: "city", attributes: ["id", "name"] };
 
+export class DonationCampService {
   // Ensure the requester is an admin before any write
   private static async assertAdmin(userId: string) {
     const user = await User.findByPk(userId);
@@ -36,59 +33,56 @@ export class DonationCampService {
     }
 
     if (user.role !== UserRole.ADMIN) {
-      throw new Error(
-        "Only administrators can manage donation camps"
-      );
+      throw new Error("Only administrators can manage donation camps");
     }
   }
 
-  static async createCamp(
-    userId: string,
-    data: CreateDonationCampData
-  ) {
+  // Look up the donor profile for the logged-in user
+  private static async getDonorProfile(userId: string) {
+    const donorProfile = await DonorProfile.findOne({ where: { user_id: userId } });
+
+    if (!donorProfile) {
+      throw new Error("Donor profile not found");
+    }
+
+    return donorProfile;
+  }
+
+  static async createCamp(userId: string, data: CreateDonationCampData) {
     await this.assertAdmin(userId);
 
-    const {
-      cityId,
-      hospitalId,
-      ...rest
-    } = data;
-
-    // Check that the city exists
-    const city = await City.findByPk(cityId);
+    const city = await City.findByPk(data.cityId);
 
     if (!city) {
       throw new Error("City not found");
     }
 
-    // If a hospital is given, check it exists and belongs to the city
-    if (hospitalId) {
-      const hospital = await Hospital.findByPk(hospitalId);
+    // If a hospital is given, it must exist and belong to the city
+    if (data.hospitalId) {
+      const hospital = await Hospital.findByPk(data.hospitalId);
 
       if (!hospital) {
         throw new Error("Hospital not found");
       }
 
-      if (hospital.city_id !== cityId) {
-        throw new Error(
-          "Hospital does not belong to the selected city"
-        );
+      if (hospital.city_id !== data.cityId) {
+        throw new Error("Hospital does not belong to the selected city");
       }
     }
 
-    const camp = await DonationCamp.create({
-      ...rest,
-      city_id: cityId,
-      hospital_id: hospitalId,
-      organizer_name: rest.organizerName,
-      organizer_type: rest.organizerType,
-      camp_date: new Date(rest.campDate),
-      start_time: rest.startTime,
-      end_time: rest.endTime,
+    return DonationCamp.create({
+      title: data.title,
+      description: data.description,
+      venue: data.venue,
+      city_id: data.cityId,
+      hospital_id: data.hospitalId,
+      organizer_name: data.organizerName,
+      organizer_type: data.organizerType,
+      camp_date: new Date(data.campDate),
+      start_time: data.startTime,
+      end_time: data.endTime,
       status: CampStatus.UPCOMING,
-    } as any);
-
-    return camp;
+    });
   }
 
   static async updateCamp(
@@ -113,42 +107,36 @@ export class DonationCampService {
     }
 
     if (data.hospitalId) {
-  const hospital = await Hospital.findByPk(data.hospitalId);
+      const hospital = await Hospital.findByPk(data.hospitalId);
 
-  if (!hospital) {
-    throw new Error("Hospital not found");
-  }
+      if (!hospital) {
+        throw new Error("Hospital not found");
+      }
 
-  const cityId = data.cityId ?? camp.city_id;
+      const cityId = data.cityId ?? camp.city_id;
 
-  if (hospital.city_id !== cityId) {
-    throw new Error(
-      "Hospital does not belong to the selected city"
-    );
-  }
-}
+      if (hospital.city_id !== cityId) {
+        throw new Error("Hospital does not belong to the selected city");
+      }
+    }
 
-   await camp.update({
-  ...(data.title && { title: data.title }),
-  ...(data.description !== undefined && { description: data.description }),
-  ...(data.venue && { venue: data.venue }),
-  ...(data.cityId && { city_id: data.cityId }),
-  ...(data.hospitalId !== undefined && { hospital_id: data.hospitalId }),
-  ...(data.organizerName && { organizer_name: data.organizerName }),
-  ...(data.organizerType && { organizer_type: data.organizerType }),
-  ...(data.campDate && { camp_date: new Date(data.campDate) }),
-  ...(data.startTime && { start_time: data.startTime }),
-  ...(data.endTime && { end_time: data.endTime }),
-});
+    await camp.update({
+      ...(data.title && { title: data.title }),
+      ...(data.description !== undefined && { description: data.description }),
+      ...(data.venue && { venue: data.venue }),
+      ...(data.cityId && { city_id: data.cityId }),
+      ...(data.hospitalId !== undefined && { hospital_id: data.hospitalId }),
+      ...(data.organizerName && { organizer_name: data.organizerName }),
+      ...(data.organizerType && { organizer_type: data.organizerType }),
+      ...(data.campDate && { camp_date: new Date(data.campDate) }),
+      ...(data.startTime && { start_time: data.startTime }),
+      ...(data.endTime && { end_time: data.endTime }),
+    });
 
     return camp;
   }
 
-  static async updateCampStatus(
-    userId: string,
-    campId: string,
-    status: CampStatus
-  ) {
+  static async updateCampStatus(userId: string, campId: string, status: CampStatus) {
     await this.assertAdmin(userId);
 
     const camp = await DonationCamp.findByPk(campId);
@@ -162,7 +150,7 @@ export class DonationCampService {
     return camp;
   }
 
-  // Public: list camps, optionally filtered by city/status
+  // Public: list camps, optionally filtered by city and status
   static async listCamps(filters: { cityId?: string; status?: CampStatus }) {
     const where: Record<string, unknown> = {};
 
@@ -171,19 +159,13 @@ export class DonationCampService {
 
     return DonationCamp.findAll({
       where,
-      include: [
-        { model: City, attributes: ["id", "name", "province"] },
-      ],
+      include: [cityInclude],
       order: [["camp_date", "ASC"]],
     });
   }
 
   static async getCampById(campId: string) {
-    const camp = await DonationCamp.findByPk(campId, {
-      include: [
-        { model: City, attributes: ["id", "name", "province"] },
-      ],
-    });
+    const camp = await DonationCamp.findByPk(campId, { include: [cityInclude] });
 
     if (!camp) {
       throw new Error("Donation camp not found");
@@ -192,15 +174,9 @@ export class DonationCampService {
     return camp;
   }
 
-  // Donor RSVP — donor identity always derived from the authenticated user
+  // Donor RSVP: donor identity always comes from the authenticated user
   static async rsvpToCamp(userId: string, campId: string) {
-    const donorProfile = await DonorProfile.findOne({
-      where: { user_id: userId },
-    });
-
-    if (!donorProfile) {
-      throw new Error("Donor profile not found");
-    }
+    const donorProfile = await this.getDonorProfile(userId);
 
     const camp = await DonationCamp.findByPk(campId);
 
@@ -209,20 +185,25 @@ export class DonationCampService {
     }
 
     if (camp.status !== CampStatus.UPCOMING) {
-      throw new Error(
-        "RSVP is only allowed for upcoming camps"
-      );
+      throw new Error("RSVP is only allowed for upcoming camps");
     }
 
     const existingRsvp = await CampRSVP.findOne({
-      where: {
-        donor_id: donorProfile.id,
-        camp_id: campId,
-      },
+      where: { donor_id: donorProfile.id, camp_id: campId },
     });
 
     if (existingRsvp) {
-      throw new Error("You have already registered for this camp");
+      if (existingRsvp.status !== RSVPStatus.CANCELLED) {
+        throw new Error("You have already registered for this camp");
+      }
+
+      // Registering again after a cancellation reuses the same row
+      await existingRsvp.update({
+        status: RSVPStatus.REGISTERED,
+        registered_at: new Date(),
+      });
+
+      return existingRsvp;
     }
 
     return CampRSVP.create({
@@ -233,19 +214,10 @@ export class DonationCampService {
   }
 
   static async cancelRsvp(userId: string, campId: string) {
-    const donorProfile = await DonorProfile.findOne({
-      where: { user_id: userId },
-    });
-
-    if (!donorProfile) {
-      throw new Error("Donor profile not found");
-    }
+    const donorProfile = await this.getDonorProfile(userId);
 
     const rsvp = await CampRSVP.findOne({
-      where: {
-        donor_id: donorProfile.id,
-        camp_id: campId,
-      },
+      where: { donor_id: donorProfile.id, camp_id: campId },
     });
 
     if (!rsvp) {
@@ -258,13 +230,7 @@ export class DonationCampService {
   }
 
   static async getMyRsvps(userId: string) {
-    const donorProfile = await DonorProfile.findOne({
-      where: { user_id: userId },
-    });
-
-    if (!donorProfile) {
-      throw new Error("Donor profile not found");
-    }
+    const donorProfile = await this.getDonorProfile(userId);
 
     return CampRSVP.findAll({
       where: { donor_id: donorProfile.id },
