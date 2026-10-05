@@ -7,6 +7,14 @@ export const api = axios.create({
   baseURL: API_BASE_URL,
 });
 
+// Pulls the server's error message out of a failed request,
+// or returns the fallback when there isn't one.
+export function errorMessage(err: unknown, fallback: string): string {
+  const message = (err as { response?: { data?: { error?: { message?: string } } } })
+    ?.response?.data?.error?.message;
+  return message ?? fallback;
+}
+
 // Extend Axios's config type so `_retry` is properly typed
 // instead of an untyped bolt-on property.
 interface RetryableRequestConfig extends InternalAxiosRequestConfig {
@@ -40,7 +48,7 @@ api.interceptors.response.use(
     }
 
     if (isRefreshing) {
-      // Queue this request until the in-flight refresh resolves —
+      // Queue this request until the in-flight refresh resolves,
       // and reject it too if the refresh ultimately fails, so it
       // doesn't hang forever.
       return new Promise((resolve, reject) => {

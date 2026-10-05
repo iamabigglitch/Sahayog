@@ -3,6 +3,7 @@ import sequelize from "./config/database";
 
 import app from "./app";
 import { RequestExpiryService } from "./services/requestExpiryService";
+import { seedAdmin } from "./services/seedAdmin";
 
 // Import models so their associations are registered
 import "./models";
@@ -28,6 +29,10 @@ async function startServer() {
     await sequelize.sync();
 
     console.log("Database synchronized!");
+
+
+    // Create (or promote) the administrator account described in .env
+    await seedAdmin();
 
 
     // Start the request auto-expiry background job
