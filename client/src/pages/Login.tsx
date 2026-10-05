@@ -23,7 +23,7 @@ function Login() {
       const { user, accessToken, refreshToken } = response.data;
 
       login(accessToken, refreshToken, user);
-      navigate("/dashboard");
+      navigate(user.role === "admin" ? "/admin" : "/dashboard");
     } catch (error: any) {
       setErrorMessage(
         error.response?.data?.error?.message ?? "Login failed. Please try again."
@@ -62,6 +62,10 @@ function Login() {
 
           <SubmitButton isLoading={isLoading}>Log in</SubmitButton>
         </form>
+
+        <p className="auth-switch">
+          <Link to="/forgot-password">Forgot your password?</Link>
+        </p>
 
         <p className="auth-switch">
           Don't have an account? <Link to="/register">Become a donor</Link>
