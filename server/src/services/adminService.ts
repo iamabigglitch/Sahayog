@@ -1,4 +1,6 @@
 import User from "../models/User";
+import City from "../models/City";
+import Hospital from "../models/Hospital";
 import DonorProfile from "../models/DonorProfile";
 import BloodRequest from "../models/BloodRequest";
 import DonationCamp from "../models/DonationCamp";
@@ -13,8 +15,22 @@ import {
   UserRole,
 } from "../types/enums";
 
-export class AdminService {
+// Builds the pagination block returned by every paged list
+const paginate = (page: number, limit: number, total: number) => ({
+  page,
+  limit,
+  total,
+  totalPages: Math.ceil(total / limit),
+});
 
+// Names shown next to each blood request.
+// The aliases must match the associations declared in models/index.ts.
+const requestIncludes = [
+  { model: Hospital, as: "hospital", attributes: ["id", "name"] },
+  { model: City, as: "city", attributes: ["id", "name"] },
+];
+
+export class AdminService {
   // Admin authorization
   private static async assertAdmin(userId: string) {
     const user = await User.findByPk(userId);
@@ -40,10 +56,10 @@ export class AdminService {
       verifiedDonors,
       unverifiedDonors,
 
-      requestedBloodRequests,
-      acceptedBloodRequests,
-      completedBloodRequests,
-      expiredBloodRequests,
+      requestedRequests,
+      acceptedRequests,
+      completedRequests,
+      expiredRequests,
 
       totalCamps,
       upcomingCamps,
@@ -55,117 +71,34 @@ export class AdminService {
       attendedRsvps,
       cancelledRsvps,
 
-      availableBloodStocks,
-      lowBloodStocks,
-      outOfStockBloodStocks,
+      availableStocks,
+      lowStocks,
+      outOfStockStocks,
     ] = await Promise.all([
-      // Users
       User.count(),
 
-      // Donors
       DonorProfile.count(),
+      DonorProfile.count({ where: { donor_verified: true } }),
+      DonorProfile.count({ where: { donor_verified: false } }),
 
-      DonorProfile.count({
-        where: {
-          donor_verified: true,
-        },
-      }),
+      BloodRequest.count({ where: { status: RequestStatus.REQUESTED } }),
+      BloodRequest.count({ where: { status: RequestStatus.ACCEPTED } }),
+      BloodRequest.count({ where: { status: RequestStatus.COMPLETED } }),
+      BloodRequest.count({ where: { status: RequestStatus.EXPIRED } }),
 
-      DonorProfile.count({
-        where: {
-          donor_verified: false,
-        },
-      }),
-
-      // Blood requests
-      BloodRequest.count({
-        where: {
-          status: RequestStatus.REQUESTED,
-        },
-      }),
-
-      BloodRequest.count({
-        where: {
-          status: RequestStatus.ACCEPTED,
-        },
-      }),
-
-      BloodRequest.count({
-        where: {
-          status: RequestStatus.COMPLETED,
-        },
-      }),
-
-      BloodRequest.count({
-        where: {
-          status: RequestStatus.EXPIRED,
-        },
-      }),
-
-      // Donation camps
       DonationCamp.count(),
+      DonationCamp.count({ where: { status: CampStatus.UPCOMING } }),
+      DonationCamp.count({ where: { status: CampStatus.ONGOING } }),
+      DonationCamp.count({ where: { status: CampStatus.COMPLETED } }),
+      DonationCamp.count({ where: { status: CampStatus.CANCELLED } }),
 
-      DonationCamp.count({
-        where: {
-          status: CampStatus.UPCOMING,
-        },
-      }),
+      CampRSVP.count({ where: { status: RSVPStatus.REGISTERED } }),
+      CampRSVP.count({ where: { status: RSVPStatus.ATTENDED } }),
+      CampRSVP.count({ where: { status: RSVPStatus.CANCELLED } }),
 
-      DonationCamp.count({
-        where: {
-          status: CampStatus.ONGOING,
-        },
-      }),
-
-      DonationCamp.count({
-        where: {
-          status: CampStatus.COMPLETED,
-        },
-      }),
-
-      DonationCamp.count({
-        where: {
-          status: CampStatus.CANCELLED,
-        },
-      }),
-
-      // Camp RSVPs
-      CampRSVP.count({
-        where: {
-          status: RSVPStatus.REGISTERED,
-        },
-      }),
-
-      CampRSVP.count({
-        where: {
-          status: RSVPStatus.ATTENDED,
-        },
-      }),
-
-      CampRSVP.count({
-        where: {
-          status: RSVPStatus.CANCELLED,
-        },
-      }),
-
-      // Blood bank
-      BloodBankStatus.count({
-        where: {
-          status: BloodStockStatus.AVAILABLE,
-        },
-      }),
-
-      BloodBankStatus.count({
-        where: {
-          status: BloodStockStatus.LOW,
-        },
-      }),
-
-      BloodBankStatus.count({
-        where: {
-          status: BloodStockStatus.OUT_OF_STOCK,
-        },
-      }),
+      BloodBankStatus.count({ where: { status: BloodStockStatus.AVAILABLE } }),
+      BloodBankStatus.count({ where: { status: BloodStockStatus.LOW } }),
+      BloodBankStatus.count({ where: { status: BloodStockStatus.OUT_OF_STOCK } }),
     ]);
 
     return {
@@ -177,10 +110,10 @@ export class AdminService {
       },
 
       bloodRequests: {
-        requested: requestedBloodRequests,
-        accepted: acceptedBloodRequests,
-        completed: completedBloodRequests,
-        expired: expiredBloodRequests,
+        requested: requestedRequests,
+        accepted: acceptedRequests,
+        completed: completedRequests,
+        expired: expiredRequests,
       },
 
       donationCamps: {
@@ -197,10 +130,11 @@ export class AdminService {
         cancelled: cancelledRsvps,
       },
 
+      // Counts of hospital + blood group rows, not blood units
       bloodBank: {
-        available: availableBloodStocks,
-        low: lowBloodStocks,
-        outOfStock: outOfStockBloodStocks,
+        available: availableStocks,
+        low: lowStocks,
+        outOfStock: outOfStockStocks,
       },
     };
   }
@@ -208,49 +142,32 @@ export class AdminService {
   // Donor management
   static async listDonors(
     userId: string,
-    filters: {
-      verified?: string;
-      page: number;
-      limit: number;
-    }
+    filters: { verified?: string; page: number; limit: number }
   ) {
     await this.assertAdmin(userId);
 
     const where: Record<string, unknown> = {};
 
-    if (filters.verified === "true") {
-      where.donor_verified = true;
-    }
-
-    if (filters.verified === "false") {
-      where.donor_verified = false;
-    }
-
-    const offset = (filters.page - 1) * filters.limit;
+    if (filters.verified === "true") where.donor_verified = true;
+    if (filters.verified === "false") where.donor_verified = false;
 
     const { rows, count } = await DonorProfile.findAndCountAll({
       where,
+      // The phone number is how an admin recognises a donor
+      include: [{ model: User, as: "user", attributes: ["id", "phone"] }],
       limit: filters.limit,
-      offset,
-      order: [["created_at", "DESC"]],
+      offset: (filters.page - 1) * filters.limit,
+      // Donor profiles have no created_at, so newest accounts come first
+      order: [[{ model: User, as: "user" }, "created_at", "DESC"]],
     });
 
     return {
       donors: rows,
-      pagination: {
-        page: filters.page,
-        limit: filters.limit,
-        total: count,
-        totalPages: Math.ceil(count / filters.limit),
-      },
+      pagination: paginate(filters.page, filters.limit, count),
     };
   }
 
-  static async updateDonorVerification(
-    userId: string,
-    donorId: string,
-    verified: boolean
-  ) {
+  static async updateDonorVerification(userId: string, donorId: string, verified: boolean) {
     await this.assertAdmin(userId);
 
     const donor = await DonorProfile.findByPk(donorId);
@@ -259,9 +176,7 @@ export class AdminService {
       throw new Error("Donor profile not found");
     }
 
-    await donor.update({
-      donor_verified: verified,
-    });
+    await donor.update({ donor_verified: verified });
 
     return donor;
   }
@@ -281,36 +196,36 @@ export class AdminService {
 
     const where: Record<string, unknown> = {};
 
-    if (filters.status) {
-      where.status = filters.status;
-    }
-
-    if (filters.urgency) {
-      where.urgency = filters.urgency;
-    }
-
-    if (filters.cityId) {
-      where.city_id = filters.cityId;
-    }
-
-    const offset = (filters.page - 1) * filters.limit;
+    if (filters.status) where.status = filters.status;
+    if (filters.urgency) where.urgency = filters.urgency;
+    if (filters.cityId) where.city_id = filters.cityId;
 
     const { rows, count } = await BloodRequest.findAndCountAll({
       where,
+      include: requestIncludes,
       limit: filters.limit,
-      offset,
+      offset: (filters.page - 1) * filters.limit,
       order: [["created_at", "DESC"]],
     });
 
     return {
       requests: rows,
-      pagination: {
-        page: filters.page,
-        limit: filters.limit,
-        total: count,
-        totalPages: Math.ceil(count / filters.limit),
-      },
+      pagination: paginate(filters.page, filters.limit, count),
     };
+  }
+
+  static async getBloodRequestById(userId: string, requestId: string) {
+    await this.assertAdmin(userId);
+
+    const request = await BloodRequest.findByPk(requestId, {
+      include: requestIncludes,
+    });
+
+    if (!request) {
+      throw new Error("Blood request not found");
+    }
+
+    return request;
   }
 
   static async updateBloodRequestStatus(
@@ -341,41 +256,15 @@ export class AdminService {
     }
 
     const validTransitions: Partial<Record<RequestStatus, RequestStatus[]>> = {
-      [RequestStatus.REQUESTED]: [
-        RequestStatus.ACCEPTED,
-        RequestStatus.EXPIRED,
-      ],
-      [RequestStatus.ACCEPTED]: [
-        RequestStatus.EXPIRED,
-      ],
+      [RequestStatus.REQUESTED]: [RequestStatus.ACCEPTED, RequestStatus.EXPIRED],
+      [RequestStatus.ACCEPTED]: [RequestStatus.EXPIRED],
     };
 
-    if (
-      !validTransitions[request.status]?.includes(status)
-    ) {
-      throw new Error(
-        "Invalid blood request status transition"
-      );
+    if (!validTransitions[request.status]?.includes(status)) {
+      throw new Error("Invalid blood request status transition");
     }
 
-    await request.update({
-      status,
-    });
-
-    return request;
-  }
-
-  static async getBloodRequestById(
-    userId: string,
-    requestId: string
-  ) {
-    await this.assertAdmin(userId);
-
-    const request = await BloodRequest.findByPk(requestId);
-
-    if (!request) {
-      throw new Error("Blood request not found");
-    }
+    await request.update({ status });
 
     return request;
   }
@@ -385,6 +274,7 @@ export class AdminService {
     await this.assertAdmin(userId);
 
     return DonationCamp.findAll({
+      include: [{ model: City, as: "city", attributes: ["id", "name"] }],
       order: [
         ["camp_date", "ASC"],
         ["start_time", "ASC"],
@@ -392,10 +282,7 @@ export class AdminService {
     });
   }
 
-  static async getDonationCamp(
-    userId: string,
-    campId: string
-  ) {
+  static async getDonationCamp(userId: string, campId: string) {
     await this.assertAdmin(userId);
 
     const camp = await DonationCamp.findByPk(campId);
@@ -407,11 +294,7 @@ export class AdminService {
     return camp;
   }
 
-  static async updateDonationCampStatus(
-    userId: string,
-    campId: string,
-    status: CampStatus
-  ) {
+  static async updateDonationCampStatus(userId: string, campId: string, status: CampStatus) {
     await this.assertAdmin(userId);
 
     const camp = await DonationCamp.findByPk(campId);
@@ -420,18 +303,13 @@ export class AdminService {
       throw new Error("Donation camp not found");
     }
 
-    await camp.update({
-      status,
-    });
+    await camp.update({ status });
 
     return camp;
   }
 
   // RSVP / attendance management
-  static async listCampRsvps(
-    userId: string,
-    campId: string
-  ) {
+  static async listCampRsvps(userId: string, campId: string) {
     await this.assertAdmin(userId);
 
     const camp = await DonationCamp.findByPk(campId);
@@ -441,24 +319,20 @@ export class AdminService {
     }
 
     return CampRSVP.findAll({
-      where: {
-        camp_id: campId,
-      },
+      where: { camp_id: campId },
       include: [
         {
           model: DonorProfile,
           as: "donor",
+          // The phone number is how an admin recognises who attended
+          include: [{ model: User, as: "user", attributes: ["id", "phone"] }],
         },
       ],
       order: [["registered_at", "ASC"]],
     });
   }
 
-  static async updateCampRsvpStatus(
-    userId: string,
-    rsvpId: string,
-    status: RSVPStatus
-  ) {
+  static async updateCampRsvpStatus(userId: string, rsvpId: string, status: RSVPStatus) {
     await this.assertAdmin(userId);
 
     const rsvp = await CampRSVP.findByPk(rsvpId);
@@ -467,9 +341,7 @@ export class AdminService {
       throw new Error("RSVP not found");
     }
 
-    await rsvp.update({
-      status,
-    });
+    await rsvp.update({ status });
 
     return rsvp;
   }
