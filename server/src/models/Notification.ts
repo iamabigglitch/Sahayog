@@ -15,7 +15,8 @@ import {
 export interface NotificationAttributes {
   id: string;
   user_id: string;
-  request_id: string;
+  // Set for blood request alerts; empty for admin announcements
+  request_id?: string | null;
   title: string;
   message: string;
   type: NotificationType;
@@ -27,7 +28,7 @@ export interface NotificationAttributes {
 export interface NotificationCreationAttributes
   extends Optional<
     NotificationAttributes,
-    "id" | "status" | "sent_at" | "created_at"
+    "id" | "request_id" | "status" | "sent_at" | "created_at"
   > {}
 
 // Notification Model
@@ -40,7 +41,7 @@ class Notification
 {
   public id!: string;
   public user_id!: string;
-  public request_id!: string;
+  public request_id?: string | null;
   public title!: string;
   public message!: string;
   public type!: NotificationType;
@@ -70,7 +71,7 @@ Notification.init(
 
     request_id: {
       type: DataTypes.UUID,
-      allowNull: false,
+      allowNull: true,
       references: {
         model: "blood_requests",
         key: "id",

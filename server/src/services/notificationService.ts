@@ -1,6 +1,8 @@
 import Notification from "../models/Notification";
+import DonorProfile from "../models/DonorProfile";
 
 import {
+  BloodGroup,
   NotificationStatus,
   NotificationType,
 } from "../types/enums";
@@ -11,6 +13,13 @@ export interface CreateNotificationData {
   title: string;
   message: string;
   type: NotificationType;
+}
+
+export interface AnnouncementData {
+  title: string;
+  message: string;
+  cityId?: string;
+  bloodGroup?: BloodGroup;
 }
 
 export class NotificationService {
@@ -53,6 +62,38 @@ export class NotificationService {
       });
 
     return notification;
+  }
+
+  // Admin announcement: one in-app notification for every donor in the audience.
+  // City and blood group are both optional; leaving both out means all donors.
+  static async sendAnnouncement(data: AnnouncementData) {
+    const where: Record<string, unknown> = {};
+
+    if (data.cityId) where.city_id = data.cityId;
+    if (data.bloodGroup) where.blood_group = data.bloodGroup;
+
+    const donors = await DonorProfile.findAll({ where });
+
+    if (donors.length === 0) {
+      throw new Error("No donors match this audience");
+    }
+
+    const now = new Date();
+
+    // In-app notifications are available the moment they are saved
+    await Notification.bulkCreate(
+      donors.map((donor) => ({
+        user_id: donor.getDataValue("user_id"),
+        request_id: null,
+        title: data.title,
+        message: data.message,
+        type: NotificationType.SYSTEM,
+        status: NotificationStatus.SENT,
+        sent_at: now,
+      }))
+    );
+
+    return { recipients: donors.length };
   }
 
   // Mark notification as sent

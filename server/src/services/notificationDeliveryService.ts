@@ -2,9 +2,7 @@ import Notification from "../models/Notification";
 import DeviceToken from "../models/DeviceToken";
 
 import { FcmService } from "./fcmService";
-import {
-  NotificationService,
-} from "./notificationService";
+import { NotificationService } from "./notificationService";
 
 export class NotificationDeliveryService {
   static async deliverNotification(
@@ -43,7 +41,8 @@ export class NotificationDeliveryService {
           message: notification.message,
           data: {
             notificationId: notification.id,
-            requestId: notification.request_id,
+            // Admin announcements have no blood request
+            requestId: notification.request_id ?? "",
             type: notification.type,
           },
         });
@@ -75,8 +74,7 @@ export class NotificationDeliveryService {
         if (
           lower.includes("registration-token-not-registered") ||
           lower.includes("invalid-registration-token") ||
-          lower.includes("not-registered") ||
-          lower.includes("invalid-registration-token")
+          lower.includes("not-registered")
         ) {
           try {
             deviceToken.is_active = false;
@@ -89,7 +87,7 @@ export class NotificationDeliveryService {
           }
         }
 
-        // Continue delivering to other device tokens — do not rethrow.
+        // Continue delivering to other device tokens; do not rethrow.
       }
     }
 

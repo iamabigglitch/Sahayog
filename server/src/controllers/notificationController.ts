@@ -85,3 +85,36 @@ export const markNotificationAsRead = async (
     });
   }
 };
+
+// Admin: send an announcement to donors
+export const createAnnouncement = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { title, message, cityId, bloodGroup } = req.body;
+
+    const result =
+      await NotificationService.sendAnnouncement({
+        title,
+        message,
+        cityId,
+        bloodGroup,
+      });
+
+    res.status(201).json({
+      message: "Notification sent",
+      ...result,
+    });
+  } catch (error) {
+    res.status(400).json({
+      error: {
+        code: "ANNOUNCEMENT_FAILED",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to send the notification",
+      },
+    });
+  }
+};

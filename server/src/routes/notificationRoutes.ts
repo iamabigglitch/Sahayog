@@ -3,6 +3,7 @@ import { Router } from "express";
 import {
   getMyNotifications,
   markNotificationAsRead,
+  createAnnouncement,
 } from "../controllers/notificationController";
 import { asyncHandler } from "../utils/asyncHandler";
 
@@ -12,11 +13,16 @@ import {
 
 import {
   notificationParamsSchema,
+  createAnnouncementSchema,
 } from "../schemas/notificationSchemas";
 
 import {
   authenticate,
 } from "../middleware/authMiddleware";
+
+import {
+  requireAdmin,
+} from "../middleware/adminMiddleware";
 
 const router = Router();
 
@@ -25,6 +31,15 @@ router.get(
   "/",
   authenticate,
   asyncHandler(getMyNotifications)
+);
+
+// Admin: send an announcement to donors
+router.post(
+  "/announcements",
+  authenticate,
+  requireAdmin,
+  validate(createAnnouncementSchema),
+  asyncHandler(createAnnouncement)
 );
 
 // Mark notification as read
