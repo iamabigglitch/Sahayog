@@ -2,11 +2,16 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Heart, Menu, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import NotificationBell from "./NotificationBell";
 
+// The logo is the link home, so there is no separate "Home" item.
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, user, logout } = useAuth();
   const navigate = useNavigate();
+
+  const isAdmin = user?.role === "admin";
+  const isDonor = isAuthenticated && !isAdmin;
 
   const closeMenu = () => {
     setMenuOpen(false);
@@ -28,31 +33,50 @@ function Navbar() {
           <span>Sahayog</span>
         </Link>
 
-        <nav className={`navbar-links ${menuOpen ? "open" : ""}`}>
-          <Link to="/" onClick={closeMenu}>
-            Home
-          </Link>
-
-          {isAuthenticated ? (
-            <>
-              <Link to="/dashboard" onClick={closeMenu}>
-                Dashboard
+        <div className="navbar-right">
+          <nav className={`navbar-links ${menuOpen ? "open" : ""}`}>
+            {/* Anyone can check blood stock, no account needed */}
+            {!isAdmin && (
+              <Link to="/blood-bank-status" onClick={closeMenu}>
+                Blood Bank
               </Link>
+            )}
+
+            {isDonor && (
+              <>
+                <Link to="/camps" onClick={closeMenu}>
+                  Camps
+                </Link>
+                <Link to="/dashboard" onClick={closeMenu}>
+                  Dashboard
+                </Link>
+              </>
+            )}
+
+            {isAdmin && (
+              <Link to="/admin" onClick={closeMenu}>
+                Admin
+              </Link>
+            )}
+
+            {isAuthenticated ? (
               <button type="button" className="register-button" onClick={handleLogout}>
                 Log out
               </button>
-            </>
-          ) : (
-            <>
-              <Link to="/login" onClick={closeMenu}>
-                Login
-              </Link>
-              <Link to="/register" className="register-button" onClick={closeMenu}>
-                Become a Donor
-              </Link>
-            </>
-          )}
-        </nav>
+            ) : (
+              <>
+                <Link to="/login" onClick={closeMenu}>
+                  Login
+                </Link>
+                <Link to="/register" className="register-button" onClick={closeMenu}>
+                  Become a Donor
+                </Link>
+              </>
+            )}
+          </nav>
+
+          {isDonor && <NotificationBell />}
+        </div>
 
         <button
           type="button"

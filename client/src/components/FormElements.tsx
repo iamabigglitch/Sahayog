@@ -1,4 +1,6 @@
+import { useId, useState } from "react";
 import type { ReactNode } from "react";
+import { Eye, EyeOff } from "lucide-react";
 
 interface FormInputProps {
   label: string;
@@ -21,18 +23,44 @@ export function FormInput({
   required,
   maxLength,
 }: FormInputProps) {
+  const id = useId();
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Password boxes get an eye button to show or hide what was typed
+  const isPassword = type === "password";
+  const inputType = isPassword && showPassword ? "text" : type;
+
   return (
     <div className="form-field">
-      <label className="form-label">{label}</label>
-      <input
-        className={`form-input ${error ? "form-input-error" : ""}`}
-        type={type}
-        value={value}
-        placeholder={placeholder}
-        required={required}
-        maxLength={maxLength}
-        onChange={(e) => onChange(e.target.value)}
-      />
+      <label className="form-label" htmlFor={id}>
+        {label}
+      </label>
+
+      <div className={isPassword ? "form-input-wrap" : undefined}>
+        <input
+          id={id}
+          className={`form-input ${error ? "form-input-error" : ""} ${isPassword ? "form-input-padded" : ""}`}
+          type={inputType}
+          value={value}
+          placeholder={placeholder}
+          required={required}
+          maxLength={maxLength}
+          onChange={(e) => onChange(e.target.value)}
+        />
+
+        {isPassword && (
+          <button
+            type="button"
+            className="form-eye"
+            onClick={() => setShowPassword((visible) => !visible)}
+            aria-label={showPassword ? "Hide password" : "Show password"}
+            aria-pressed={showPassword}
+          >
+            {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+          </button>
+        )}
+      </div>
+
       {error && <span className="form-error">{error}</span>}
     </div>
   );
@@ -62,10 +90,15 @@ export function FormSelect({
   placeholder = "Select an option",
   required,
 }: FormSelectProps) {
+  const id = useId();
+
   return (
     <div className="form-field">
-      <label className="form-label">{label}</label>
+      <label className="form-label" htmlFor={id}>
+        {label}
+      </label>
       <select
+        id={id}
         className={`form-input ${error ? "form-input-error" : ""}`}
         value={value}
         required={required}

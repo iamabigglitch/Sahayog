@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { api } from "../lib/api";
 import {
   Droplet,
@@ -6,7 +7,7 @@ import {
   ShieldCheck,
   ShieldQuestion,
   Calendar,
-  Bell,
+  CalendarCheck,
   Award,
   CheckCircle2,
   XCircle,
@@ -30,22 +31,17 @@ interface DonationHistoryItem {
   donation_date: string;
 }
 
-interface NotificationItem {
+interface CampRsvpItem {
   id: string;
-  title: string;
-  message: string;
-  status: string;
-  sent_at: string | null;
+  camp_id: string;
+  status: "registered" | "attended" | "cancelled";
+  camp?: {
+    title: string;
+    venue: string;
+    camp_date: string; // "YYYY-MM-DD"
+    status: string;
+  };
 }
-
-const CITY_NAMES: Record<string, string> = {
-  "8acf0b9e-9a5a-4096-894c-046988ad1234": "Bhaktapur",
-  "9771f7ce-966d-42a3-a009-904d6b7c00a4": "Biratnagar",
-  "e2c684fa-05cc-4558-8f2c-ac6d2b9da33b": "Birgunj",
-  "304dc55d-641f-4447-9dc9-02d09b1c55c4": "Kathmandu",
-  "3781ac36-a652-4b41-a0de-5b718791e8d5": "Lalitpur",
-  "c6676af2-044a-419d-9a82-d326b9f98dcc": "Pokhara",
-};
 
 function statusIcon(status: string) {
   if (status === "completed") return <CheckCircle2 size={16} />;
@@ -53,26 +49,42 @@ function statusIcon(status: string) {
   return <Clock size={16} />;
 }
 
+// camp_date is a plain date, so build it in local time to avoid a day shift.
+function formatCampDate(value: string) {
+  const [year, month, day] = value.slice(0, 10).split("-").map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString(undefined, {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
+}
+
 function Dashboard() {
   const [profile, setProfile] = useState<DonorProfile | null>(null);
   const [history, setHistory] = useState<DonationHistoryItem[]>([]);
-  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [campRsvps, setCampRsvps] = useState<CampRsvpItem[]>([]);
+  const [cities, setCities] = useState<{ id: string; name: string }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isTogglingAvailability, setIsTogglingAvailability] = useState(false);
+  const [cancellingCampId, setCancellingCampId] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     const loadDashboard = async () => {
       try {
-        const [profileRes, historyRes, notificationsRes] = await Promise.all([
+        const [profileRes, historyRes, campsRes, citiesRes] = await Promise.all([
           api.get("/donors/me"),
           api.get("/donation-history/me"),
-          api.get("/notifications"),
+          // Camps are secondary: a failure here must not break the whole dashboard.
+          api.get("/camp-rsvps/my").catch(() => null),
+          // City names are cosmetic: fall back to "Unknown city" if this fails.
+          api.get("/cities").catch(() => null),
         ]);
 
         setProfile(profileRes.data.profile);
         setHistory(historyRes.data.donationHistory ?? []);
-        setNotifications(notificationsRes.data.notifications ?? []);
+        setCampRsvps(campsRes?.data.rsvps ?? []);
+        setCities(citiesRes?.data.cities ?? []);
       } catch (error: any) {
         setErrorMessage(
           error.response?.data?.error?.message ?? "Failed to load your dashboard."
@@ -103,14 +115,23 @@ function Dashboard() {
     }
   };
 
-  const handleMarkAsRead = async (notificationId: string) => {
+  const handleCancelCamp = async (campId: string) => {
+    setCancellingCampId(campId);
+    setErrorMessage("");
+
     try {
-      await api.patch(`/notifications/${notificationId}/read`);
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === notificationId ? { ...n, status: "read" } : n))
+      const response = await api.patch(`/camp-rsvps/${campId}/rsvp/cancel`);
+      setCampRsvps((prev) =>
+        prev.map((r) =>
+          r.camp_id === campId ? { ...r, status: response.data.rsvp.status } : r
+        )
       );
-    } catch {
-      // non-critical
+    } catch (error: any) {
+      setErrorMessage(
+        error.response?.data?.error?.message ?? "Failed to cancel your registration."
+      );
+    } finally {
+      setCancellingCampId("");
     }
   };
 
@@ -122,7 +143,6 @@ function Dashboard() {
     return <main className="placeholder-page">{errorMessage}</main>;
   }
 
-  const unreadCount = notifications.filter((n) => n.status !== "read").length;
   const completedDonations = history.filter((h) => h.status === "completed").length;
 
   return (
@@ -139,7 +159,7 @@ function Dashboard() {
             <h1>Welcome back</h1>
             <p>
               <MapPin size={14} />
-              {CITY_NAMES[profile?.city_id ?? ""] ?? "Unknown city"}
+              {cities.find((city) => city.id === profile?.city_id)?.name ?? "Unknown city"}
               <span className="dash-dot">·</span>
               {profile?.donor_verified ? (
                 <span className="dash-badge verified">
@@ -201,46 +221,6 @@ function Dashboard() {
         </div>
 
         <div className="dash-grid">
-          {/* Notifications */}
-          <section className="dash-panel">
-            <div className="dash-panel-header">
-              <h2>
-                <Bell size={17} /> Notifications
-              </h2>
-              {unreadCount > 0 && <span className="dash-count">{unreadCount}</span>}
-            </div>
-
-            {notifications.length === 0 ? (
-              <p className="dash-empty">
-                You'll see it here the moment someone nearby needs your blood type.
-              </p>
-            ) : (
-              <ul className="dash-list">
-                {notifications.map((notification) => (
-                  <li
-                    key={notification.id}
-                    className={`dash-notification ${notification.status !== "read" ? "unread" : ""}`}
-                  >
-                    <span className="dash-notification-dot" />
-                    <div>
-                      <strong>{notification.title}</strong>
-                      <p>{notification.message}</p>
-                    </div>
-                    {notification.status !== "read" && (
-                      <button
-                        type="button"
-                        className="dash-mark-read"
-                        onClick={() => handleMarkAsRead(notification.id)}
-                      >
-                        Mark read
-                      </button>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-
           {/* Donation history */}
           <section className="dash-panel">
             <div className="dash-panel-header">
@@ -261,6 +241,56 @@ function Dashboard() {
                     <div>
                       <strong>{record.status.replace("_", " ")}</strong>
                       <span>{new Date(record.donation_date).toLocaleDateString()}</span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          {/* My camps */}
+          <section className="dash-panel">
+            <div className="dash-panel-header">
+              <h2>
+                <CalendarCheck size={17} /> My camps
+              </h2>
+              <Link to="/camps" className="dash-panel-link">
+                Browse camps
+              </Link>
+            </div>
+
+            {campRsvps.length === 0 ? (
+              <p className="dash-empty">
+                You haven't registered for a donation camp yet.{" "}
+                <Link to="/camps">See upcoming camps</Link>.
+              </p>
+            ) : (
+              <ul className="dash-list">
+                {campRsvps.map((rsvp) => (
+                  <li key={rsvp.id} className="dash-camp">
+                    <div>
+                      <Link to={`/camps/${rsvp.camp_id}`}>
+                        <strong>{rsvp.camp?.title ?? "Donation camp"}</strong>
+                      </Link>
+                      {rsvp.camp && (
+                        <span className="dash-camp-meta">
+                          {formatCampDate(rsvp.camp.camp_date)} · {rsvp.camp.venue}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="dash-camp-actions">
+                      <span className={`dash-camp-status ${rsvp.status}`}>{rsvp.status}</span>
+                      {rsvp.status === "registered" && rsvp.camp?.status === "upcoming" && (
+                        <button
+                          type="button"
+                          className="dash-mark-read"
+                          disabled={cancellingCampId === rsvp.camp_id}
+                          onClick={() => handleCancelCamp(rsvp.camp_id)}
+                        >
+                          {cancellingCampId === rsvp.camp_id ? "Cancelling..." : "Cancel"}
+                        </button>
+                      )}
                     </div>
                   </li>
                 ))}

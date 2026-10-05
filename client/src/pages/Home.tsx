@@ -1,12 +1,14 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Heart, Users } from "lucide-react";
+import { api } from "../lib/api";
+import { useAuth } from "../context/AuthContext";
 
 const steps = [
   {
     number: "01",
     title: "A request goes out",
     description:
-      "Someone in need — or their family — shares the blood type, hospital, and how urgent it is. No account required.",
+      "Someone in need, or their family, shares the blood type, hospital, and how urgent it is. No account required.",
   },
   {
     number: "02",
@@ -18,11 +20,54 @@ const steps = [
     number: "03",
     title: "A donor responds",
     description:
-      "Matched donors get notified right away and choose whether they're able to help — no waiting on word of mouth.",
+      "Matched donors get notified right away and choose whether they're able to help, with no waiting on word of mouth.",
   },
 ];
 
+const ways = [
+  {
+    title: "Urgent requests",
+    description:
+      "Anyone can post a request without an account. Matching donors nearby are notified straight away.",
+  },
+  {
+    title: "Planned camps",
+    description:
+      "Organisers hold donation camps on set days. Donors register ahead, so hospitals can plan around who is coming.",
+  },
+  {
+    title: "A stock board",
+    description:
+      "Hospitals confirm their blood stock by group, and each entry shows when it was last confirmed.",
+  },
+];
+
+const pad = (value: number) => String(value).padStart(2, "0");
+
+// The home page explains Sahayog. Getting around is the navbar's job, so the only
+// button here is the one action the navbar doesn't offer: asking for blood.
 function Home() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
+
+  // Real numbers from the public API instead of made-up figures
+  const [counts, setCounts] = useState<{ cities: number; hospitals: number } | null>(null);
+
+  useEffect(() => {
+    Promise.all([api.get("/cities"), api.get("/hospitals")])
+      .then(([cities, hospitals]) =>
+        setCounts({
+          cities: (cities.data.cities ?? []).length,
+          hospitals: (hospitals.data.hospitals ?? []).length,
+        })
+      )
+      .catch(() => {
+        /* the stats simply stay hidden */
+      });
+  }, []);
+
+  const showStats = counts !== null && (counts.cities > 0 || counts.hospitals > 0);
+
   return (
     <main>
       <section className="hero-section">
@@ -36,18 +81,17 @@ function Home() {
           </h1>
 
           <p className="hero-lede">
-            Sahayog connects people who need blood with donors nearby —
-            so a request doesn't have to travel by luck or word of mouth.
+            Sahayog connects people who need blood with donors nearby, so a request
+            doesn't have to travel by luck or word of mouth.
           </p>
 
-          <div className="hero-actions">
-            <Link to="/register" className="primary-button">
-              Become a donor
-            </Link>
-            <Link to="/request-blood" className="text-link">
-              Request blood now
-            </Link>
-          </div>
+          {!isAdmin && (
+            <div className="hero-actions">
+              <Link to="/request-blood" className="primary-button">
+                Request blood now
+              </Link>
+            </div>
+          )}
         </div>
 
         <div className="hero-pulse" aria-hidden="true">
@@ -62,16 +106,19 @@ function Home() {
             />
           </svg>
           <span className="pulse-dot" />
-          <div className="pulse-stats">
-            <div>
-              <strong>212</strong>
-              <span>lives helped this year</span>
+
+          {showStats && (
+            <div className="pulse-stats">
+              <div>
+                <strong>{pad(counts.cities)}</strong>
+                <span>cities covered</span>
+              </div>
+              <div>
+                <strong>{pad(counts.hospitals)}</strong>
+                <span>hospitals on the network</span>
+              </div>
             </div>
-            <div>
-              <strong>04</strong>
-              <span>cities covered so far</span>
-            </div>
-          </div>
+          )}
         </div>
       </section>
 
@@ -93,14 +140,23 @@ function Home() {
         </ol>
       </section>
 
-      <section className="cta-section">
-        <Heart className="cta-icon" size={28} fill="currentColor" strokeWidth={0} />
-        <h2>You could be someone's match today.</h2>
-        <p>It takes ten minutes to register. It could take one call to matter.</p>
-        <Link to="/register" className="cta-button">
-          <Users size={17} />
-          Join as a donor
-        </Link>
+      <section className="ways-section" aria-labelledby="ways-heading">
+        <div className="ways-heading">
+          <h2 id="ways-heading">Urgent requests, planned camps.</h2>
+          <p>
+            Requests find a donor when someone needs blood right now. Camps keep
+            hospital stock healthy, so fewer emergencies start from an empty shelf.
+          </p>
+        </div>
+
+        <div className="ways-grid">
+          {ways.map((way) => (
+            <article key={way.title} className="way-card">
+              <h3>{way.title}</h3>
+              <p>{way.description}</p>
+            </article>
+          ))}
+        </div>
       </section>
     </main>
   );
