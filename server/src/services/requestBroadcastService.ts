@@ -3,17 +3,11 @@ import {
   MatchedDonor,
 } from "./donorMatchingService";
 
-import {
-  NotificationService,
-} from "./notificationService";
+import { NotificationService } from "./notificationService";
 
-import {
-  NotificationDeliveryService,
-} from "./notificationDeliveryService";
+import { NotificationDeliveryService } from "./notificationDeliveryService";
 
-import {
-  NotificationType,
-} from "../types/enums";
+import { NotificationType } from "../types/enums";
 
 export interface BroadcastResult {
   requestId: string;
@@ -49,7 +43,8 @@ export class RequestBroadcastService {
 
       const notification =
         await NotificationService.createNotification({
-          userId: donor.donorId,
+          // Notifications belong to the user account, not the donor profile
+          userId: donor.userId,
 
           requestId,
 

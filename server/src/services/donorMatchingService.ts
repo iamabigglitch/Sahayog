@@ -10,7 +10,9 @@ import { calculateDistanceInKm } from "../utils/distance";
 import { calculateMatchingScore } from "../utils/matchingScore";
 
 export interface MatchedDonor {
+
   donorId: string;
+  userId: string;
   bloodGroup: string;
   cityId: string;
   donorVerified: boolean;
@@ -138,6 +140,7 @@ export class DonorMatchingService {
 
       matches.push({
         donorId: donor.getDataValue("id"),
+        userId: donor.getDataValue("user_id"),
         bloodGroup: donorBloodGroup,
         cityId: donorCityId,
         donorVerified,
@@ -148,7 +151,6 @@ export class DonorMatchingService {
     }
 
     // 7. Rank donors
-
     matches.sort(
       (a, b) =>
         b.matchingScore -

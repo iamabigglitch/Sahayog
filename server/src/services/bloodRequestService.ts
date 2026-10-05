@@ -9,9 +9,7 @@ import {
   RelationshipToPatient,
 } from "../types/enums";
 
-import {
-  RequestBroadcastService,
-} from "./requestBroadcastService";
+import { RequestBroadcastService } from "./requestBroadcastService";
 
 export interface CreateBloodRequestData {
   bloodGroupNeeded: BloodGroup;
@@ -24,11 +22,16 @@ export interface CreateBloodRequestData {
   urgency?: Urgency;
 }
 
-export class BloodRequestService {
+// How long a request stays open, by urgency (in hours).
+// Change these numbers to tune the tiers.
+const EXPIRY_HOURS: Record<Urgency, number> = {
+  [Urgency.CRITICAL]: 12,
+  [Urgency.HIGH]: 24,
+  [Urgency.NORMAL]: 48,
+};
 
-  static async createRequest(
-    data: CreateBloodRequestData
-  ) {
+export class BloodRequestService {
+  static async createRequest(data: CreateBloodRequestData) {
     const {
       bloodGroupNeeded,
       unitsNeeded,
@@ -48,71 +51,65 @@ export class BloodRequestService {
     }
 
     // Check that the hospital exists
-    const hospital =
-      await Hospital.findByPk(hospitalId);
+    const hospital = await Hospital.findByPk(hospitalId);
 
     if (!hospital) {
       throw new Error("Hospital not found");
     }
 
-    // Make sure the hospital belongs
-    // to the selected city. Use the Sequelize raw value rather than
-    // the shadowed public field on the model instance.
-    const hospitalCityId = hospital.getDataValue("city_id");
-
-    if (hospitalCityId !== cityId) {
-      throw new Error(
-        "Hospital does not belong to the selected city"
-      );
+    // The hospital must belong to the selected city. Read the raw value
+    // rather than the shadowed public field on the model instance.
+    if (hospital.getDataValue("city_id") !== cityId) {
+      throw new Error("Hospital does not belong to the selected city");
     }
 
-    // Blood requests expire after 48 hours
-    const expiresAt = new Date();
+    // More urgent requests expire sooner
+    const expiresAt = new Date(Date.now() + EXPIRY_HOURS[urgency] * 60 * 60 * 1000);
 
-    expiresAt.setHours(
-      expiresAt.getHours() + 48
-    );
+    const bloodRequest = await BloodRequest.create({
+      blood_group_needed: bloodGroupNeeded,
+      units_needed: unitsNeeded,
+      hospital_id: hospitalId,
+      city_id: cityId,
+      requester_name: requesterName,
+      contact_phone: contactPhone,
+      relationship_to_patient: relationshipToPatient,
+      urgency,
+      status: RequestStatus.REQUESTED,
+      trust_score: 0,
+      expires_at: expiresAt,
+    });
 
-    // Create the blood request
-    const bloodRequest =
-      await BloodRequest.create({
-        blood_group_needed:
-          bloodGroupNeeded,
+    // Tell nearby donors. The request is already saved at this point, so a problem
+    // with notifications is logged instead of making the whole request look failed.
+    try {
+      await RequestBroadcastService.broadcastRequest(bloodRequest.getDataValue("id"));
+    } catch (error) {
+      console.error("Could not notify donors for blood request", bloodRequest.getDataValue("id"), error);
+    }
 
-        units_needed:
-          unitsNeeded,
+    return bloodRequest;
+  }
 
-        hospital_id:
-          hospitalId,
+  static async getRequestById(requestId: string) {
+    const bloodRequest = await BloodRequest.findByPk(requestId, {
+      include: [
+        {
+          model: Hospital,
+          as: "hospital",
+          attributes: ["id", "name", "address"],
+        },
+        {
+          model: City,
+          as: "city",
+          attributes: ["id", "name", "province"],
+        },
+      ],
+    });
 
-        city_id:
-          cityId,
-
-        requester_name:
-          requesterName,
-
-        contact_phone:
-          contactPhone,
-
-        relationship_to_patient:
-          relationshipToPatient,
-
-        urgency,
-
-        status:
-          RequestStatus.REQUESTED,
-
-        trust_score: 0,
-
-        expires_at:
-          expiresAt,
-      });
-
-    // Broadcast the request
-    // to suitable donors.
-    const requestId = bloodRequest.getDataValue("id");
-    await RequestBroadcastService
-      .broadcastRequest(requestId);
+    if (!bloodRequest) {
+      throw new Error("Blood request not found");
+    }
 
     return bloodRequest;
   }

@@ -46,3 +46,26 @@ export const createBloodRequest = async (
     });
   }
 };
+
+export const getBloodRequestById = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const bloodRequest = await BloodRequestService.getRequestById(
+      req.params.id as string
+    );
+
+    res.status(200).json({ bloodRequest });
+  } catch (error) {
+    res.status(404).json({
+      error: {
+        code: "BLOOD_REQUEST_NOT_FOUND",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Blood request not found",
+      },
+    });
+  }
+};

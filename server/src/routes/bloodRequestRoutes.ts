@@ -2,6 +2,7 @@ import { Router } from "express";
 
 import {
   createBloodRequest,
+  getBloodRequestById,
 } from "../controllers/bloodRequestController";
 import { asyncHandler } from "../utils/asyncHandler";
 
@@ -28,6 +29,13 @@ router.post(
   authRateLimiter,
   validate(createBloodRequestSchema),
   asyncHandler(createBloodRequest)
+);
+
+// Public request detail lookup — used by donors viewing a matched request
+// and by requesters checking status. No auth required.
+router.get(
+  "/:id",
+  asyncHandler(getBloodRequestById)
 );
 
 
