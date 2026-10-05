@@ -18,7 +18,10 @@ Sahayog
 │  │  │  ├─ react.svg
 │  │  │  └─ vite.svg
 │  │  ├─ components
+│  │  │  ├─ ConfirmDialog.tsx
+│  │  │  ├─ FormElements.tsx
 │  │  │  ├─ Navbar.tsx
+│  │  │  ├─ NotificationBell.tsx
 │  │  │  └─ ProtectedRoute.tsx
 │  │  ├─ context
 │  │  │  └─ AuthContext.tsx
@@ -27,7 +30,25 @@ Sahayog
 │  │  │  └─ api.ts
 │  │  ├─ main.tsx
 │  │  └─ pages
-│  │     └─ Home.tsx
+│  │     ├─ Admin
+│  │     │  ├─ Account.tsx
+│  │     │  ├─ Camps.tsx
+│  │     │  ├─ Donors.tsx
+│  │     │  ├─ Hospitals.tsx
+│  │     │  ├─ index.tsx
+│  │     │  ├─ Notifications.tsx
+│  │     │  ├─ Overview.tsx
+│  │     │  └─ Requests.tsx
+│  │     ├─ BloodBankStatus.tsx
+│  │     ├─ Camps.tsx
+│  │     ├─ Dashboard.tsx
+│  │     ├─ ForgotPassword.tsx
+│  │     ├─ Home.tsx
+│  │     ├─ Login.tsx
+│  │     ├─ Register.tsx
+│  │     ├─ RequestBlood.tsx
+│  │     ├─ RequestDetail.tsx
+│  │     └─ VerifyOtp.tsx
 │  ├─ tsconfig.app.json
 │  ├─ tsconfig.json
 │  ├─ tsconfig.node.json
@@ -50,12 +71,15 @@ Sahayog
    │  │  ├─ bloodBankStatusController.ts
    │  │  ├─ bloodRequestController.ts
    │  │  ├─ campRSVPController.ts
+   │  │  ├─ cityController.ts
    │  │  ├─ deviceTokenController.ts
    │  │  ├─ donationCampController.ts
    │  │  ├─ donationHistoryController.ts
    │  │  ├─ donorMatchingController.ts
    │  │  ├─ donorProfileController.ts
+   │  │  ├─ hospitalController.ts
    │  │  ├─ notificationController.ts
+   │  │  ├─ passwordController.ts
    │  │  └─ requestResponseController.ts
    │  ├─ middleware
    │  │  ├─ adminMiddleware.ts
@@ -86,11 +110,13 @@ Sahayog
    │  │  ├─ bloodBankStatusRoutes.ts
    │  │  ├─ bloodRequestRoutes.ts
    │  │  ├─ campRSVPRoutes.ts
+   │  │  ├─ cityRoutes.ts
    │  │  ├─ deviceTokenRoutes.ts
    │  │  ├─ donationCampRoutes.ts
    │  │  ├─ donationHistoryRoutes.ts
    │  │  ├─ donorMatchingRoutes.ts
    │  │  ├─ donorProfileRoutes.ts
+   │  │  ├─ hospitalRoutes.ts
    │  │  ├─ notificationRoutes.ts
    │  │  └─ requestResponseRoutes.ts
    │  ├─ schemas
@@ -103,6 +129,7 @@ Sahayog
    │  │  ├─ donationHistorySchemas.ts
    │  │  ├─ donorMatchingSchemas.ts
    │  │  ├─ donorProfileSchemas.ts
+   │  │  ├─ hospitalSchemas.ts
    │  │  ├─ notificationSchemas.ts
    │  │  └─ requestResponseSchemas.ts
    │  ├─ server.ts
@@ -111,6 +138,7 @@ Sahayog
    │  │  ├─ authService.ts
    │  │  ├─ bloodBankStatusService.ts
    │  │  ├─ bloodRequestService.ts
+   │  │  ├─ cityService.ts
    │  │  ├─ deviceTokenService.ts
    │  │  ├─ donationCampService.ts
    │  │  ├─ donationHistoryService.ts
@@ -120,9 +148,11 @@ Sahayog
    │  │  ├─ notificationDeliveryService.ts
    │  │  ├─ notificationService.ts
    │  │  ├─ otpService.ts
+   │  │  ├─ passwordService.ts
    │  │  ├─ requestBroadcastService.ts
    │  │  ├─ requestExpiryService.ts
-   │  │  └─ requestResponseService.ts
+   │  │  ├─ requestResponseService.ts
+   │  │  └─ seedAdmin.ts
    │  ├─ types
    │  │  ├─ authtypes.ts
    │  │  ├─ enums.ts
